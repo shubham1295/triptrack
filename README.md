@@ -1,16 +1,22 @@
 # triptrack
 
-A new Flutter project.
+Current Phase 1 — Setup & MVP 
+✅ Initialize Flutter project & setup SQLite model 
+✅ Build core UI (Home, Trip, Expense CRUD) 
+✅ Add local storage 
+✅ Add basic analytics (charts, totals)
 
-## Getting Started
+Design System
 
-This project is a starting point for a Flutter application.
+Colors:
+Primary: #0066CC (blue accent)
+Secondary: #FFA726 (warm orange)
+Background: #F8F9FA
+Text: #333333
+Font: Poppins / Inter (Google Fonts)
 
-A few resources to get you started if this is your first Flutter project:
+Corner radius: 12px
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Buttons: Rounded + shadow for elevation
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Cards: Simple, light background with icons
