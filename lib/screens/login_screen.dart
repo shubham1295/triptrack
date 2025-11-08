@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_theme.dart';
 import '../widgets/elevated_button.dart';
 import '../widgets/hill_background.dart';
 import 'home_screen.dart';
@@ -12,16 +10,15 @@ class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
   void _navigateToHome(BuildContext context) {
-    // Navigator.pushReplacement(
-    //   context,
-    //   MaterialPageRoute(builder: (context) => const HomeScreen()),
-    // );
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           // Hill background
@@ -62,6 +59,7 @@ class LoginScreen extends StatelessWidget {
 class _LogoSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(
       children: [
         // Placeholder Logo
@@ -69,25 +67,28 @@ class _LogoSection extends StatelessWidget {
           width: 120,
           height: 120,
           decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: kBorderRadius,
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: AppColors.text.withOpacity(0.1),
+                color: theme.colorScheme.onSurface.withOpacity(0.1),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
-          child: Icon(Icons.flight_takeoff, size: 64, color: AppColors.primary),
+          child: Icon(
+            Icons.flight_takeoff,
+            size: 64,
+            color: theme.colorScheme.primary,
+          ),
         ),
         const SizedBox(height: 24),
 
         // Welcome Text
         Text(
           'Welcome to',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: AppColors.text,
+          style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
             fontSize: 30,
           ),
@@ -96,8 +97,7 @@ class _LogoSection extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           'TripTrack',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: AppColors.text,
+          style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
             fontSize: 36,
           ),
@@ -106,8 +106,8 @@ class _LogoSection extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           'Track your spending while travelling',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.grey,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.textTheme.bodySmall?.color,
             fontWeight: FontWeight.w300,
           ),
           textAlign: TextAlign.center,
@@ -131,6 +131,7 @@ class _ButtonsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -153,9 +154,8 @@ class _ButtonsSection extends StatelessWidget {
               width: _kButtonWidth,
               icon: Icons.email,
               onPressed: onEmailPressed,
-              textStyle: Theme.of(
-                context,
-              ).textTheme.labelLarge?.copyWith(fontSize: 16),
+              textStyle: theme.textTheme.labelLarge?.copyWith(fontSize: 15),
+              borderRadius: BorderRadius.circular(50),
             ),
           ),
         ),
@@ -168,18 +168,19 @@ class _ButtonsSection extends StatelessWidget {
             child: TextButton(
               onPressed: onGuestPressed,
               style: TextButton.styleFrom(
-                foregroundColor: AppColors.grey,
+                foregroundColor: theme.colorScheme.onSurfaceVariant,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 12,
                 ),
-                minimumSize: Size(_kButtonWidth, 48),
+                minimumSize: const Size(_kButtonWidth, 48),
               ),
               child: Text(
                 'Continue as Guest',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: AppColors.grey,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w700,
+                  fontSize: 12,
                 ),
               ),
             ),
@@ -198,23 +199,22 @@ class _GoogleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return OutlinedButton(
       onPressed: onPressed,
       style: OutlinedButton.styleFrom(
         backgroundColor: Colors.transparent,
-        foregroundColor: AppColors.text,
-        side: const BorderSide(color: AppColors.primary, width: 2),
-        shape: RoundedRectangleBorder(borderRadius: kBorderRadius),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        minimumSize: Size(_kButtonWidth, 48),
+        foregroundColor: theme.colorScheme.onSurface,
+        side: BorderSide(color: theme.colorScheme.primary, width: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+        minimumSize: const Size(_kButtonWidth, 48),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
           // Google logo
-          // Image.asset('assets/images/google_logo.png', width: 50, height: 24),
-          // const SizedBox(width: 5),
           SizedBox(
             width: 30,
             height: 30,
@@ -222,15 +222,14 @@ class _GoogleButton extends StatelessWidget {
               'assets/images/google_logo.png',
               fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.login, size: 24, color: AppColors.primary),
+                  Icon(Icons.login, size: 24, color: theme.colorScheme.primary),
             ),
           ),
           Text(
             'Continue with Google',
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: AppColors.text,
+            style: theme.textTheme.labelLarge?.copyWith(
               fontWeight: FontWeight.w600,
-              fontSize: 16,
+              fontSize: 15,
             ),
           ),
         ],

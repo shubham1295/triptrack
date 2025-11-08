@@ -11,92 +11,107 @@ class AppTextStyles {
     double? fontSize,
     FontWeight? fontWeight,
     Color? color,
+    bool isDarkMode = false,
   }) {
     return GoogleFonts.poppins(
       fontSize: fontSize,
       fontWeight: fontWeight,
-      color: color ?? AppColors.text,
+      color: color ?? (isDarkMode ? AppColorsDark.text : AppColors.text),
     );
   }
 
   // Display styles
-  static TextStyle displayLarge = _baseStyle(
+  static TextStyle displayLarge({bool isDarkMode = false}) => _baseStyle(
     fontSize: 57,
     fontWeight: FontWeight.w400,
+    isDarkMode: isDarkMode,
   );
 
-  static TextStyle displayMedium = _baseStyle(
+  static TextStyle displayMedium({bool isDarkMode = false}) => _baseStyle(
     fontSize: 45,
     fontWeight: FontWeight.w400,
+    isDarkMode: isDarkMode,
   );
 
-  static TextStyle displaySmall = _baseStyle(
+  static TextStyle displaySmall({bool isDarkMode = false}) => _baseStyle(
     fontSize: 36,
     fontWeight: FontWeight.w400,
+    isDarkMode: isDarkMode,
   );
 
   // Headline styles
-  static TextStyle headlineLarge = _baseStyle(
+  static TextStyle headlineLarge({bool isDarkMode = false}) => _baseStyle(
     fontSize: 32,
     fontWeight: FontWeight.w600,
+    isDarkMode: isDarkMode,
   );
 
-  static TextStyle headlineMedium = _baseStyle(
+  static TextStyle headlineMedium({bool isDarkMode = false}) => _baseStyle(
     fontSize: 28,
     fontWeight: FontWeight.w600,
+    isDarkMode: isDarkMode,
   );
 
-  static TextStyle headlineSmall = _baseStyle(
+  static TextStyle headlineSmall({bool isDarkMode = false}) => _baseStyle(
     fontSize: 24,
     fontWeight: FontWeight.w600,
+    isDarkMode: isDarkMode,
   );
 
   // Title styles
-  static TextStyle titleLarge = _baseStyle(
+  static TextStyle titleLarge({bool isDarkMode = false}) => _baseStyle(
     fontSize: 22,
     fontWeight: FontWeight.w500,
+    isDarkMode: isDarkMode,
   );
 
-  static TextStyle titleMedium = _baseStyle(
+  static TextStyle titleMedium({bool isDarkMode = false}) => _baseStyle(
     fontSize: 16,
     fontWeight: FontWeight.w500,
+    isDarkMode: isDarkMode,
   );
 
-  static TextStyle titleSmall = _baseStyle(
+  static TextStyle titleSmall({bool isDarkMode = false}) => _baseStyle(
     fontSize: 14,
     fontWeight: FontWeight.w500,
+    isDarkMode: isDarkMode,
   );
 
   // Body styles
-  static TextStyle bodyLarge = _baseStyle(
+  static TextStyle bodyLarge({bool isDarkMode = false}) => _baseStyle(
     fontSize: 16,
     fontWeight: FontWeight.w400,
+    isDarkMode: isDarkMode,
   );
 
-  static TextStyle bodyMedium = _baseStyle(
+  static TextStyle bodyMedium({bool isDarkMode = false}) => _baseStyle(
     fontSize: 14,
     fontWeight: FontWeight.w400,
+    isDarkMode: isDarkMode,
   );
 
-  static TextStyle bodySmall = _baseStyle(
+  static TextStyle bodySmall({bool isDarkMode = false}) => _baseStyle(
     fontSize: 12,
     fontWeight: FontWeight.w400,
+    isDarkMode: isDarkMode,
   );
 
   // Label styles
-  static TextStyle labelLarge = _baseStyle(
+  static TextStyle labelLarge({bool isDarkMode = false}) => _baseStyle(
     fontSize: 14,
     fontWeight: FontWeight.w500,
+    isDarkMode: isDarkMode,
   );
 
-  static TextStyle labelMedium = _baseStyle(
+  static TextStyle labelMedium({bool isDarkMode = false}) => _baseStyle(
     fontSize: 12,
     fontWeight: FontWeight.w500,
+    isDarkMode: isDarkMode,
   );
 
-  static TextStyle labelSmall = _baseStyle(
+  static TextStyle labelSmall({bool isDarkMode = false}) => _baseStyle(
     fontSize: 11,
     fontWeight: FontWeight.w500,
+    isDarkMode: isDarkMode,
   );
 }
-

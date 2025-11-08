@@ -12,6 +12,7 @@ class AppElevatedButton extends StatelessWidget {
   final IconData? icon;
   final bool isLoading;
   final TextStyle? textStyle;
+  final BorderRadiusGeometry? borderRadius;
 
   const AppElevatedButton({
     super.key,
@@ -23,12 +24,15 @@ class AppElevatedButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.textStyle,
+    this.borderRadius,
   });
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = isPrimary ? AppColors.primary : AppColors.secondary;
-    final foregroundColor = AppColors.white;
+    final backgroundColor = isPrimary
+        ? Theme.of(context).colorScheme.primary
+        : Theme.of(context).colorScheme.secondary;
+    final foregroundColor = Theme.of(context).colorScheme.onPrimary;
 
     return SizedBox(
       width: width,
@@ -40,8 +44,10 @@ class AppElevatedButton extends StatelessWidget {
           foregroundColor: foregroundColor,
           elevation: 4,
           shadowColor: backgroundColor.withOpacity(0.3),
-          shape: RoundedRectangleBorder(borderRadius: kBorderRadius),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: borderRadius ?? kBorderRadius,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
         ),
         child: isLoading
             ? SizedBox(

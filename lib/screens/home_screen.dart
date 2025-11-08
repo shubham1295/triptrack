@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../services/theme_provider.dart';
 import '../theme/app_colors.dart';
 import '../widgets/app_card.dart';
 
@@ -7,10 +9,19 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('TripTrack'),
+        actions: [
+          Switch(
+            value: themeProvider.themeMode == ThemeMode.dark,
+            onChanged: (value) {
+              themeProvider.toggleTheme();
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -33,8 +44,8 @@ class HomeScreen extends StatelessWidget {
                     Text(
                       'Start tracking your travel expenses',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.grey,
-                          ),
+                        color: Theme.of(context).textTheme.bodySmall?.color,
+                      ),
                     ),
                   ],
                 ),

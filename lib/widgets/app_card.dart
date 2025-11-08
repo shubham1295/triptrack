@@ -31,13 +31,8 @@ class AppCard extends StatelessWidget {
       color: backgroundColor ?? AppColors.white,
       elevation: elevation ?? 2,
       shadowColor: AppColors.text.withOpacity(0.1),
-      shape: RoundedRectangleBorder(
-        borderRadius: kBorderRadius,
-      ),
-      margin: margin ?? const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 8,
-      ),
+      shape: RoundedRectangleBorder(borderRadius: kBorderRadius),
+      margin: margin ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: InkWell(
         onTap: onTap,
         borderRadius: kBorderRadius,
@@ -51,18 +46,15 @@ class AppCard extends StatelessWidget {
                 Row(
                   children: [
                     if (icon != null) ...[
-                      Icon(
-                        icon,
-                        color: AppColors.primary,
-                        size: 24,
-                      ),
+                      Icon(icon, color: AppColors.primary, size: 24),
                       const SizedBox(width: 12),
                     ],
                     if (title != null)
                       Expanded(
                         child: Text(
                           title!,
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
                                 color: AppColors.text,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -82,4 +74,3 @@ class AppCard extends StatelessWidget {
     return card;
   }
 }
-
