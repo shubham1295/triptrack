@@ -8,7 +8,7 @@ class AppColors {
   static const Color primary = Color(0xFF0066CC);
 
   // Secondary color - warm orange
-  static const Color secondary = Color(0xFFFFA726);
+  static const Color secondary = Color(0xFF00BFFF);
 
   // Background color
   static const Color background = Color(0xFFF8F9FA);
@@ -31,7 +31,7 @@ class AppColorsDark {
   static const Color primary = Color(0xFF4DA6FF);
 
   // Secondary color - a softer orange for dark mode
-  static const Color secondary = Color(0xFFFFB74D);
+  static const Color secondary = Color(0xFF4D9BF7);
 
   // Background color - a dark grey
   static const Color background = Color(0xFF121212);

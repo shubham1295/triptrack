@@ -39,39 +39,111 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            Container(
+              color: Theme.of(context).colorScheme.primary,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top,
+                  bottom: 16.0,
+                  left: 16.0,
+                  right: 16.0,
+                ),
+                child: SizedBox(
+                  height: 220.0, // Explicitly set height to prevent overflow
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'My Trips',
-                        style: TextStyle(color: Colors.white, fontSize: 20),
+                      Row(
+                        children: [
+                          Text(
+                            'My Trips',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimary,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const Spacer(),
+                          ElevatedButton(
+                            onPressed: () {
+                              // Handle "My Trip" button tap
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.secondary,
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.onSecondary,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              elevation: 4,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.add, size: 16),
+                                SizedBox(width: 4),
+                                Text('Add', style: TextStyle(fontSize: 14)),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const Spacer(),
-                      ElevatedButton(
-                        onPressed: () {
-                          // Handle "My Trip" button tap
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.blue,
+                      const SizedBox(height: 20),
+                      // New Box for trip details
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Text('Add'),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundImage: AssetImage(
+                                'assets/images/google_logo.png',
+                              ), // Placeholder image
+                              radius: 25,
+                            ),
+                            const SizedBox(width: 10),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Japan',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  '10 Nov - 20 Nov 2025',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                Text(
+                                  '1200',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
             ),
-            // ListTile(
-            //   title: const Text('+ Add'),
-            //   onTap: () {
-            //     // Handle '+ Add' button tap
-            //   },
-            // ),
           ],
         ),
       ),
@@ -89,10 +161,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor:
-            Colors.blue, // You can customize the selected item color
-        unselectedItemColor:
-            Colors.grey, // You can customize the unselected item color
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Theme.of(
+          context,
+        ).colorScheme.onSurface.withAlpha((0.6 * 255).round()),
         onTap: _onItemTapped,
       ),
     );
