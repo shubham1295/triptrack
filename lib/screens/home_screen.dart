@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:triptrack/widgets/trip_card.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -36,8 +37,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
+        width: MediaQuery.of(context).size.width * 0.85, // Added drawer width
+        child: Column(
           children: [
             Container(
               color: Theme.of(context).colorScheme.primary,
@@ -48,100 +49,96 @@ class _HomeScreenState extends State<HomeScreen> {
                   left: 16.0,
                   right: 16.0,
                 ),
-                child: SizedBox(
-                  height: 220.0, // Explicitly set height to prevent overflow
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'My Trips',
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onPrimary,
-                              fontSize: 18,
-                            ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'My Trips',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary,
+                            fontSize: 18,
                           ),
-                          const Spacer(),
-                          ElevatedButton(
-                            onPressed: () {
-                              // Handle "My Trip" button tap
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.secondary,
-                              foregroundColor: Theme.of(
-                                context,
-                              ).colorScheme.onSecondary,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              elevation: 4,
+                        ),
+                        const Spacer(),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Handle "My Trip" button tap
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.secondary,
+                            foregroundColor: Theme.of(
+                              context,
+                            ).colorScheme.onSecondary,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
                             ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.add, size: 16),
-                                SizedBox(width: 4),
-                                Text('Add', style: TextStyle(fontSize: 14)),
-                              ],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
                             ),
+                            elevation: 4,
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      // New Box for trip details
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).cardColor,
-                          borderRadius: BorderRadius.circular(10),
+                          child: Row(
+                            children: [
+                              Icon(Icons.add, size: 16),
+                              SizedBox(width: 4),
+                              Text('Add', style: TextStyle(fontSize: 14)),
+                            ],
+                          ),
                         ),
-                        child: Row(
-                          children: [
-                            CircleAvatar(
-                              backgroundImage: AssetImage(
-                                'assets/images/google_logo.png',
-                              ), // Placeholder image
-                              radius: 25,
-                            ),
-                            const SizedBox(width: 10),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Japan',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  '10 Nov - 20 Nov 2025',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                                Text(
-                                  '1200',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    const TripCard(
+                      imageUrl: 'assets/images/google_logo.png',
+                      title: 'Japan',
+                      date: '10/Nov/2025 - 20/Nov/2025',
+                      budget: '1200 / Rs. 2,00,000',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(
+                left: 16.0,
+                top: 16.0,
+                // bottom: 8.0,
+              ),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Previous Trip',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 14,
+                    fontWeight: FontWeight.normal,
                   ),
                 ),
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(16.0),
+                children: const [
+                  TripCard(
+                    imageUrl: 'assets/images/google_logo.png',
+                    title: 'EuropeEuropeEuropeEuropeEuropeEuropeEuropeEurope',
+                    date: '01/Jan/2026 - 15/Jan/2026',
+                    budget: '2000 / Rs. 3,50,000',
+                  ),
+                  SizedBox(height: 10),
+                  TripCard(
+                    imageUrl: 'assets/images/google_logo.png',
+                    title: 'USA',
+                    date: '01/Mar/2026 - 10/Mar/2026',
+                    budget: '1500 / Rs. 2,50,000',
+                  ),
+                ],
               ),
             ),
           ],
