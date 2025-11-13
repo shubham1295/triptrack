@@ -37,9 +37,23 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
+        title: Row(
+          children: [
+            Text('Japan'),
+            Spacer(),
+            IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () {
+                // Handle settings icon tap
+              },
+            ),
+          ],
+        ),
       ),
       drawer: Drawer(
-        width: MediaQuery.of(context).size.width * AppConstants.drawerWidthFactor, // Added drawer width
+        width:
+            MediaQuery.of(context).size.width *
+            AppConstants.drawerWidthFactor, // Added drawer width
         child: Column(
           children: [
             Container(
@@ -88,7 +102,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             children: [
                               Icon(Icons.add, size: AppConstants.addIconSize),
                               SizedBox(width: AppConstants.sizedBoxWidth),
-                              Text(AppStrings.add, style: TextStyle(fontSize: AppConstants.addTextFontSize)),
+                              Text(
+                                AppStrings.add,
+                                style: TextStyle(
+                                  fontSize: AppConstants.addTextFontSize,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -99,18 +118,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       imageUrl: 'assets/images/google_logo.png',
                       title: 'Japan',
                       date: '10/Nov/2025 - 20/Nov/2025',
-                      budget: '1200 / Rs. 2,00,000',
+                      budget: 'Rs.1200 / Rs. 2,00,000',
                     ),
                   ],
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(
-                left: 16.0,
-                top: 16.0,
-                // bottom: 8.0,
-              ),
+              padding: const EdgeInsets.only(left: 16.0, top: 16.0),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -123,6 +138,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
+            const Divider(
+              height: 1,
+              indent: 16.0,
+              endIndent: 16.0,
+              color: Colors.grey,
+            ),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
@@ -131,14 +152,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     imageUrl: 'assets/images/google_logo.png',
                     title: 'EuropeEuropeEuropeEuropeEuropeEuropeEuropeEurope',
                     date: '01/Jan/2026 - 15/Jan/2026',
-                    budget: '2000 / Rs. 3,50,000',
+                    budget: 'Rs. 2000 / Rs. 3,50,000',
                   ),
                   SizedBox(height: AppConstants.tripCardHeight),
                   TripCard(
                     imageUrl: 'assets/images/google_logo.png',
                     title: 'USA',
                     date: '01/Mar/2026 - 10/Mar/2026',
-                    budget: '1500 / Rs. 2,50,000',
+                    budget: 'Rs. 1500 / Rs. 2,50,000',
                   ),
                 ],
               ),
@@ -146,14 +167,262 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      body: _widgetOptions.elementAt(_selectedIndex),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 20.0,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 5),
+                      Container(
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.5),
+                              spreadRadius: 2,
+                              blurRadius: 5,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    'Total',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  Spacer(),
+                                  Icon(
+                                    Icons.keyboard_arrow_down,
+                                    color: Colors.grey,
+                                    size: 16,
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 5),
+                              Center(
+                                child: Builder(
+                                  builder: (context) {
+                                    final baseStyle = Theme.of(
+                                      context,
+                                    ).textTheme.bodyLarge;
+                                    return RichText(
+                                      text: TextSpan(
+                                        style: baseStyle,
+                                        children: <TextSpan>[
+                                          TextSpan(
+                                            text: 'Rs 19,000',
+                                            style: baseStyle?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: '.55',
+                                            style: baseStyle?.copyWith(
+                                              fontWeight: FontWeight.normal,
+                                              fontSize:
+                                                  (baseStyle.fontSize ?? 24.0) *
+                                                  0.75,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              // Budget Amount
+                              Center(
+                                child: Text(
+                                  '9000/2,00,000',
+                                  style: TextStyle(
+                                    color: Colors.grey, // Same color as 'Total'
+                                    fontSize: 12, // Same size as 'Total'
+                                  ),
+                                ),
+                              ),
+                              // 📏 Space before the progress bar
+                              const SizedBox(height: 10),
+
+                              // 📊 HARDCODED PROGRESS BAR ADDED HERE
+                              ClipRRect(
+                                // Used ClipRRect to round the edges of the progress bar
+                                borderRadius: BorderRadius.circular(5.0),
+                                child: const LinearProgressIndicator(
+                                  value: 0.45, // Hardcoded progress value (45%)
+                                  minHeight:
+                                      4.0, // Control the height of the bar
+                                  backgroundColor: Colors.grey,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.blue, // Use your desired color
+                                  ),
+                                ),
+                              ),
+                              // 📊 END OF PROGRESS BAR
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 5),
+                      Container(
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.5),
+                              spreadRadius: 2,
+                              blurRadius: 5,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    'Today',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  Spacer(),
+                                  Icon(
+                                    Icons.keyboard_arrow_down,
+                                    color: Colors.grey,
+                                    size: 16,
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 5),
+                              Center(
+                                child: Builder(
+                                  builder: (context) {
+                                    final baseStyle = Theme.of(
+                                      context,
+                                    ).textTheme.bodyLarge;
+                                    return RichText(
+                                      text: TextSpan(
+                                        style: baseStyle,
+                                        children: <TextSpan>[
+                                          TextSpan(
+                                            text: 'Rs 5000',
+                                            style: baseStyle?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: '.55',
+                                            style: baseStyle?.copyWith(
+                                              fontWeight: FontWeight.normal,
+                                              fontSize:
+                                                  (baseStyle.fontSize ?? 24.0) *
+                                                  0.75,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              // Budget Amount
+                              Center(
+                                child: Text(
+                                  '9000/2,00,000',
+                                  style: TextStyle(
+                                    color: Colors.grey, // Same color as 'Total'
+                                    fontSize: 12, // Same size as 'Total'
+                                  ),
+                                ),
+                              ),
+                              // 📏 Space before the progress bar
+                              const SizedBox(height: 10),
+
+                              // 📊 HARDCODED PROGRESS BAR ADDED HERE
+                              ClipRRect(
+                                // Used ClipRRect to round the edges of the progress bar
+                                borderRadius: BorderRadius.circular(5.0),
+                                child: const LinearProgressIndicator(
+                                  value: 0.45, // Hardcoded progress value (45%)
+                                  minHeight:
+                                      4.0, // Control the height of the bar
+                                  backgroundColor: Colors.grey,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.blue, // Use your desired color
+                                  ),
+                                ),
+                              ),
+                              // 📊 END OF PROGRESS BAR
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // const SizedBox(height: 2),
+          const Divider(indent: 16.0, endIndent: 16.0, color: Colors.grey),
+          const SizedBox(height: 10),
+          Expanded(
+            child: Container(
+              // color: Colors.yellow,
+              child: _widgetOptions.elementAt(_selectedIndex),
+            ),
+          ),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: AppStrings.entries),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: AppStrings.stats),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: AppStrings.search),
-          BottomNavigationBarItem(icon: Icon(Icons.map), label: AppStrings.map),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list_alt),
+            label: AppStrings.entries,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bar_chart),
+            label: AppStrings.stats,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: AppStrings.search,
+          ),
+          // BottomNavigationBarItem(icon: Icon(Icons.map), label: AppStrings.map),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: AppStrings.settings,
@@ -161,11 +430,19 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Theme.of(
-          context,
-        ).colorScheme.onSurface.withAlpha((AppConstants.bottomNavBarSelectedItemAlpha * 255).round()),
+        unselectedItemColor: Theme.of(context).colorScheme.onSurface.withAlpha(
+          (AppConstants.bottomNavBarSelectedItemAlpha * 255).round(),
+        ),
         onTap: _onItemTapped,
       ),
+      floatingActionButton: _selectedIndex == 0
+          ? FloatingActionButton(
+              onPressed: () {
+                // Handle floating action button tap
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 }

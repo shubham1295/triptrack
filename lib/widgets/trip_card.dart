@@ -26,7 +26,12 @@ class TripCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(backgroundImage: AssetImage(imageUrl), radius: AppConstants.avatarRadius * MediaQuery.of(context).textScaleFactor),
+          CircleAvatar(
+            backgroundImage: AssetImage(imageUrl),
+            radius:
+                AppConstants.avatarRadius *
+                MediaQuery.of(context).textScaleFactor,
+          ),
           const SizedBox(width: 5),
           Expanded(
             child: Column(
@@ -48,7 +53,8 @@ class TripCard extends StatelessWidget {
                       width: 35, // Adjust as needed
                       height: 30, // Adjust as needed
                       child: PopupMenuButton<String>(
-                        iconSize: AppConstants.popupMenuIconSize, // Made smaller
+                        iconSize:
+                            AppConstants.popupMenuIconSize, // Made smaller
                         onSelected: (String result) {
                           // Handle selection
                         },
@@ -77,13 +83,19 @@ class TripCard extends StatelessWidget {
                     const SizedBox(width: 4),
                     Text(
                       date,
-                      style: const TextStyle(fontSize: 13, color: AppConstants.greyColor),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppConstants.greyColor,
+                      ),
                     ),
                   ],
                 ),
                 Text(
                   budget,
-                  style: const TextStyle(fontSize: 13, color: AppConstants.greyColor),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppConstants.greyColor,
+                  ),
                 ),
               ],
             ),
