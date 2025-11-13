@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:triptrack/theme/app_constants.dart';
+import 'package:triptrack/theme/app_strings.dart';
 
 class TripCard extends StatelessWidget {
   final String imageUrl;
@@ -20,11 +22,11 @@ class TripCard extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.blueGrey[50],
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppConstants.cardBorderRadius,
       ),
       child: Row(
         children: [
-          CircleAvatar(backgroundImage: AssetImage(imageUrl), radius: 25),
+          CircleAvatar(backgroundImage: AssetImage(imageUrl), radius: AppConstants.avatarRadius * MediaQuery.of(context).textScaleFactor),
           const SizedBox(width: 5),
           Expanded(
             child: Column(
@@ -46,19 +48,19 @@ class TripCard extends StatelessWidget {
                       width: 35, // Adjust as needed
                       height: 30, // Adjust as needed
                       child: PopupMenuButton<String>(
-                        iconSize: 20, // Made smaller
+                        iconSize: AppConstants.popupMenuIconSize, // Made smaller
                         onSelected: (String result) {
                           // Handle selection
                         },
                         itemBuilder: (BuildContext context) =>
                             <PopupMenuEntry<String>>[
                               const PopupMenuItem<String>(
-                                value: 'Edit',
-                                child: Text('Edit Trip'),
+                                value: AppStrings.edit,
+                                child: Text(AppStrings.editTrip),
                               ),
                               const PopupMenuItem<String>(
-                                value: 'Delete',
-                                child: Text('Delete Trip'),
+                                value: AppStrings.delete,
+                                child: Text(AppStrings.deleteTrip),
                               ),
                             ],
                       ),
@@ -69,19 +71,19 @@ class TripCard extends StatelessWidget {
                   children: [
                     const Icon(
                       Icons.calendar_month_outlined,
-                      size: 12,
-                      color: Colors.grey,
+                      size: AppConstants.calendarIconSize,
+                      color: AppConstants.greyColor,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       date,
-                      style: const TextStyle(fontSize: 13, color: Colors.grey),
+                      style: const TextStyle(fontSize: 13, color: AppConstants.greyColor),
                     ),
                   ],
                 ),
                 Text(
                   budget,
-                  style: const TextStyle(fontSize: 13, color: Colors.grey),
+                  style: const TextStyle(fontSize: 13, color: AppConstants.greyColor),
                 ),
               ],
             ),

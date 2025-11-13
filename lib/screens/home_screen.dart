@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:triptrack/theme/app_constants.dart';
+import 'package:triptrack/theme/app_strings.dart';
 import 'package:triptrack/widgets/trip_card.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -12,11 +14,11 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   static const List<Widget> _widgetOptions = <Widget>[
-    Center(child: Text('Entries Screen')),
-    Center(child: Text('Stats Screen')),
-    Center(child: Text('Search Screen')),
-    Center(child: Text('Map Screen')),
-    Center(child: Text('Settings Screen')),
+    Center(child: Text(AppStrings.entries)),
+    Center(child: Text(AppStrings.stats)),
+    Center(child: Text(AppStrings.search)),
+    Center(child: Text(AppStrings.map)),
+    Center(child: Text(AppStrings.settings)),
   ];
 
   void _onItemTapped(int index) {
@@ -37,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       drawer: Drawer(
-        width: MediaQuery.of(context).size.width * 0.85, // Added drawer width
+        width: MediaQuery.of(context).size.width * AppConstants.drawerWidthFactor, // Added drawer width
         child: Column(
           children: [
             Container(
@@ -55,10 +57,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       children: [
                         Text(
-                          'My Trips',
+                          AppStrings.myTrips,
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.onPrimary,
-                            fontSize: 18,
+                            fontSize: AppConstants.myTripsFontSize,
                           ),
                         ),
                         const Spacer(),
@@ -84,15 +86,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.add, size: 16),
-                              SizedBox(width: 4),
-                              Text('Add', style: TextStyle(fontSize: 14)),
+                              Icon(Icons.add, size: AppConstants.addIconSize),
+                              SizedBox(width: AppConstants.sizedBoxWidth),
+                              Text(AppStrings.add, style: TextStyle(fontSize: AppConstants.addTextFontSize)),
                             ],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppConstants.sizedBoxHeight),
                     const TripCard(
                       imageUrl: 'assets/images/google_logo.png',
                       title: 'Japan',
@@ -112,10 +114,10 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Previous Trip',
+                  AppStrings.previousTrip,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
-                    fontSize: 14,
+                    fontSize: AppConstants.previousTripFontSize,
                     fontWeight: FontWeight.normal,
                   ),
                 ),
@@ -131,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     date: '01/Jan/2026 - 15/Jan/2026',
                     budget: '2000 / Rs. 3,50,000',
                   ),
-                  SizedBox(height: 10),
+                  SizedBox(height: AppConstants.tripCardHeight),
                   TripCard(
                     imageUrl: 'assets/images/google_logo.png',
                     title: 'USA',
@@ -148,20 +150,20 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Entries'),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Stats'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Map'),
+          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: AppStrings.entries),
+          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: AppStrings.stats),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: AppStrings.search),
+          BottomNavigationBarItem(icon: Icon(Icons.map), label: AppStrings.map),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
-            label: 'Settings',
+            label: AppStrings.settings,
           ),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Theme.of(
           context,
-        ).colorScheme.onSurface.withAlpha((0.6 * 255).round()),
+        ).colorScheme.onSurface.withAlpha((AppConstants.bottomNavBarSelectedItemAlpha * 255).round()),
         onTap: _onItemTapped,
       ),
     );
