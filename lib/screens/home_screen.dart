@@ -27,6 +27,70 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _showDetailOptionsSheet(BuildContext context) {
+    // Define your selectable options
+    const options = [
+      'View Detailed Breakdown',
+      'Change Date Range',
+      'Export Data',
+    ];
+
+    // Set an initial selected value (you can use your parent widget's current state here)
+    String currentSelection = options[0];
+
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext bc) {
+        // Use StatefulBuilder to manage the state of the sheet
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return Container(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    'Select an Option',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Divider(),
+                  // Map over the options to create ListTiles
+                  ...options.map((optionText) {
+                    // Check if the current option is the selected one
+                    final isSelected = currentSelection == optionText;
+
+                    return ListTile(
+                      title: Text(optionText),
+                      // Add the checkmark icon if selected
+                      trailing: isSelected
+                          ? const Icon(Icons.check, color: Colors.blue)
+                          : null,
+                      onTap: () {
+                        // 1. Update the state inside the sheet
+                        setState(() {
+                          currentSelection = optionText;
+                        });
+
+                        // 2. You would typically close the sheet and pass the value
+                        //    back to the parent widget after selection.
+                        // Navigator.pop(context, optionText);
+
+                        // For this example, we just update the tick
+                      },
+                    );
+                  }).toList(),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -210,11 +274,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   Spacer(),
-                                  Icon(
-                                    Icons.keyboard_arrow_down,
-                                    color: Colors.grey,
-                                    size: 16,
+                                  // Icon(
+                                  //   Icons.keyboard_arrow_down,
+                                  //   color: Colors.grey,
+                                  //   size: 16,
+                                  // ),
+                                  // ✨ START OF CHANGE: GestureDetector for onTap
+                                  GestureDetector(
+                                    onTap: () =>
+                                        _showDetailOptionsSheet(context),
+                                    child: const Icon(
+                                      Icons.keyboard_arrow_down,
+                                      color: Colors.grey,
+                                      size: 16,
+                                    ),
                                   ),
+                                  // ✨ END OF CHANGE
                                 ],
                               ),
                               SizedBox(height: 5),
