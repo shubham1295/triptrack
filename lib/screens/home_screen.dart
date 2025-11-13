@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:triptrack/theme/app_constants.dart';
 import 'package:triptrack/theme/app_strings.dart';
 import 'package:triptrack/widgets/trip_card.dart';
+import 'package:triptrack/screens/entries_screen.dart';
+import 'package:triptrack/screens/stats_screen.dart';
+import 'package:triptrack/screens/search_screen.dart';
+import 'package:triptrack/screens/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,70 +17,17 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _widgetOptions = <Widget>[
-    Center(child: Text(AppStrings.entries)),
-    Center(child: Text(AppStrings.stats)),
-    Center(child: Text(AppStrings.search)),
-    Center(child: Text(AppStrings.map)),
-    Center(child: Text(AppStrings.settings)),
+  late final List<Widget> _widgetOptions = <Widget>[
+    const EntriesScreen(),
+    const StatsScreen(),
+    const SearchScreen(),
+    const SettingsScreen(),
   ];
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
-  }
-
-  void _showDetailOptionsSheet(BuildContext context) {
-    const options = [
-      'View Detailed Breakdown',
-      'Change Date Range',
-      'Export Data',
-    ];
-
-    // Set an initial selected value (you can use your parent widget's current state here)
-    String currentSelection = options[0];
-
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext bc) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return Container(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    'Select an Option',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Divider(),
-                  ...options.map((optionText) {
-                    final isSelected = currentSelection == optionText;
-
-                    return ListTile(
-                      title: Text(optionText),
-                      trailing: isSelected
-                          ? const Icon(Icons.check, color: Colors.blue)
-                          : null,
-                      onTap: () {
-                        setState(() {
-                          currentSelection = optionText;
-                        });
-                      },
-                    );
-                  }),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
   }
 
   @override
@@ -219,257 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16.0,
-              vertical: 20.0,
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 5),
-                      Container(
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.5),
-                              spreadRadius: 2,
-                              blurRadius: 5,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    'Total',
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  Spacer(),
-                                  // Icon(
-                                  //   Icons.keyboard_arrow_down,
-                                  //   color: Colors.grey,
-                                  //   size: 16,
-                                  // ),
-                                  // ✨ START OF CHANGE: GestureDetector for onTap
-                                  GestureDetector(
-                                    onTap: () =>
-                                        _showDetailOptionsSheet(context),
-                                    child: const Icon(
-                                      Icons.keyboard_arrow_down,
-                                      color: Colors.grey,
-                                      size: 16,
-                                    ),
-                                  ),
-                                  // ✨ END OF CHANGE
-                                ],
-                              ),
-                              SizedBox(height: 5),
-                              Center(
-                                child: Builder(
-                                  builder: (context) {
-                                    final baseStyle = Theme.of(
-                                      context,
-                                    ).textTheme.bodyLarge;
-                                    return RichText(
-                                      text: TextSpan(
-                                        style: baseStyle,
-                                        children: <TextSpan>[
-                                          TextSpan(
-                                            text: 'Rs 19,000',
-                                            style: baseStyle?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          TextSpan(
-                                            text: '.55',
-                                            style: baseStyle?.copyWith(
-                                              fontWeight: FontWeight.normal,
-                                              fontSize:
-                                                  (baseStyle.fontSize ?? 24.0) *
-                                                  0.75,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              // Budget Amount
-                              Center(
-                                child: Text(
-                                  '9000/2,00,000',
-                                  style: TextStyle(
-                                    color: Colors.grey, // Same color as 'Total'
-                                    fontSize: 12, // Same size as 'Total'
-                                  ),
-                                ),
-                              ),
-                              // 📏 Space before the progress bar
-                              const SizedBox(height: 10),
-
-                              // 📊 HARDCODED PROGRESS BAR ADDED HERE
-                              ClipRRect(
-                                // Used ClipRRect to round the edges of the progress bar
-                                borderRadius: BorderRadius.circular(5.0),
-                                child: const LinearProgressIndicator(
-                                  value: 0.45, // Hardcoded progress value (45%)
-                                  minHeight:
-                                      4.0, // Control the height of the bar
-                                  backgroundColor: Colors.grey,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.blue, // Use your desired color
-                                  ),
-                                ),
-                              ),
-                              // 📊 END OF PROGRESS BAR
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SizedBox(height: 5),
-                      Container(
-                        height: 100,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.surface,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.5),
-                              spreadRadius: 2,
-                              blurRadius: 5,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    'Today',
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  Spacer(),
-                                  Icon(
-                                    Icons.keyboard_arrow_down,
-                                    color: Colors.grey,
-                                    size: 16,
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 5),
-                              Center(
-                                child: Builder(
-                                  builder: (context) {
-                                    final baseStyle = Theme.of(
-                                      context,
-                                    ).textTheme.bodyLarge;
-                                    return RichText(
-                                      text: TextSpan(
-                                        style: baseStyle,
-                                        children: <TextSpan>[
-                                          TextSpan(
-                                            text: 'Rs 5000',
-                                            style: baseStyle?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          TextSpan(
-                                            text: '.55',
-                                            style: baseStyle?.copyWith(
-                                              fontWeight: FontWeight.normal,
-                                              fontSize:
-                                                  (baseStyle.fontSize ?? 24.0) *
-                                                  0.75,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              // Budget Amount
-                              Center(
-                                child: Text(
-                                  '9000/2,00,000',
-                                  style: TextStyle(
-                                    color: Colors.grey, // Same color as 'Total'
-                                    fontSize: 12, // Same size as 'Total'
-                                  ),
-                                ),
-                              ),
-                              // 📏 Space before the progress bar
-                              const SizedBox(height: 10),
-
-                              // 📊 HARDCODED PROGRESS BAR ADDED HERE
-                              ClipRRect(
-                                // Used ClipRRect to round the edges of the progress bar
-                                borderRadius: BorderRadius.circular(5.0),
-                                child: const LinearProgressIndicator(
-                                  value: 0.45, // Hardcoded progress value (45%)
-                                  minHeight:
-                                      4.0, // Control the height of the bar
-                                  backgroundColor: Colors.grey,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.blue, // Use your desired color
-                                  ),
-                                ),
-                              ),
-                              // 📊 END OF PROGRESS BAR
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // const SizedBox(height: 2),
-          const Divider(indent: 16.0, endIndent: 16.0, color: Colors.grey),
-          const SizedBox(height: 10),
-          Expanded(
-            child: Container(
-              // color: Colors.yellow,
-              child: _widgetOptions.elementAt(_selectedIndex),
-            ),
-          ),
-        ],
-      ),
+      body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
