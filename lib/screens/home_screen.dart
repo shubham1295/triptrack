@@ -28,7 +28,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showDetailOptionsSheet(BuildContext context) {
-    // Define your selectable options
     const options = [
       'View Detailed Breakdown',
       'Change Date Range',
@@ -41,7 +40,6 @@ class _HomeScreenState extends State<HomeScreen> {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext bc) {
-        // Use StatefulBuilder to manage the state of the sheet
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
             return Container(
@@ -57,31 +55,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const Divider(),
-                  // Map over the options to create ListTiles
                   ...options.map((optionText) {
-                    // Check if the current option is the selected one
                     final isSelected = currentSelection == optionText;
 
                     return ListTile(
                       title: Text(optionText),
-                      // Add the checkmark icon if selected
                       trailing: isSelected
                           ? const Icon(Icons.check, color: Colors.blue)
                           : null,
                       onTap: () {
-                        // 1. Update the state inside the sheet
                         setState(() {
                           currentSelection = optionText;
                         });
-
-                        // 2. You would typically close the sheet and pass the value
-                        //    back to the parent widget after selection.
-                        // Navigator.pop(context, optionText);
-
-                        // For this example, we just update the tick
                       },
                     );
-                  }).toList(),
+                  }),
                 ],
               ),
             );
