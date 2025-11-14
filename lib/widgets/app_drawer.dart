@@ -62,9 +62,12 @@ class AppDrawer extends StatelessWidget {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.add, size: AppConstants.addIconSize),
+                            const Icon(
+                              Icons.add,
+                              size: AppConstants.addIconSize,
+                            ),
                             const SizedBox(width: AppConstants.sizedBoxWidth),
-                            Text(
+                            const Text(
                               AppStrings.add,
                               style: TextStyle(
                                 fontSize: AppConstants.addTextFontSize,

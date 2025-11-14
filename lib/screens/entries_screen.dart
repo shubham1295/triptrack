@@ -166,7 +166,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
           child: Row(
             children: [
               Expanded(
