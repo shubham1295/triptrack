@@ -50,6 +50,7 @@ class TripCard extends StatelessWidget {
                       ),
                     ),
                     SizedBox(
+                      // Added const here
                       width: 35, // Adjust as needed
                       height: 30, // Adjust as needed
                       child: PopupMenuButton<String>(

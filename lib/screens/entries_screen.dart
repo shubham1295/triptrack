@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:triptrack/models/entry.dart';
 import 'package:triptrack/widgets/entry_item.dart';
+import 'package:triptrack/widgets/summary_card.dart';
 
 class EntriesScreen extends StatefulWidget {
   const EntriesScreen({super.key});
@@ -9,6 +11,58 @@ class EntriesScreen extends StatefulWidget {
 }
 
 class _EntriesScreenState extends State<EntriesScreen> {
+  final List<Entry> _entries = const [
+    Entry(
+      imagePath: 'assets/images/google_logo.png',
+      name: 'Flight Ticket',
+      description: 'Tokyo Flight',
+      amount: 'Rs 12,500',
+      convertedAmount: '¥ 21,250',
+    ),
+    Entry(
+      imagePath: 'assets/images/google_logo.png',
+      name: 'Hotel Booking',
+      description: 'Shinjuku Hotel',
+      amount: 'Rs 8,000',
+      convertedAmount: '¥ 13,600',
+    ),
+    Entry(
+      imagePath: 'assets/images/google_logo.png',
+      name: 'Restaurant',
+      description: 'Dinner at Senso-ji',
+      amount: 'Rs 2,500',
+      convertedAmount: '¥ 4,250',
+    ),
+    Entry(
+      imagePath: 'assets/images/google_logo.png',
+      name: 'Transport',
+      description: 'Taxi to Airport',
+      amount: 'Rs 1,200',
+      convertedAmount: '¥ 2,040',
+    ),
+    Entry(
+      imagePath: 'assets/images/google_logo.png',
+      name: 'Shopping',
+      description: 'Souvenirs',
+      amount: 'Rs 3,000',
+      convertedAmount: '¥ 5,100',
+    ),
+    Entry(
+      imagePath: 'assets/images/google_logo.png',
+      name: 'Shopping',
+      description: 'Souvenirs',
+      amount: 'Rs 3,000',
+      convertedAmount: '¥ 5,100',
+    ),
+    Entry(
+      imagePath: 'assets/images/google_logo.png',
+      name: 'Shopping',
+      description: 'Souvenirs',
+      amount: 'Rs 3,000',
+      convertedAmount: '¥ 5,100',
+    ),
+  ];
+
   void _showDetailOptionsSheet(BuildContext context) {
     const options = [
       'View Detailed Breakdown',
@@ -32,8 +86,8 @@ class _EntriesScreenState extends State<EntriesScreen> {
                   Text(
                     'Select an Option',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const Divider(),
                   ...options.map((optionText) {
@@ -60,99 +114,6 @@ class _EntriesScreenState extends State<EntriesScreen> {
     );
   }
 
-  Widget _buildSummaryCard({
-    required BuildContext context,
-    required String title,
-    required String amount,
-    required String budget,
-    required double progressValue,
-  }) {
-    return Container(
-      height: 100,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () => _showDetailOptionsSheet(context),
-                  child: const Icon(
-                    Icons.keyboard_arrow_down,
-                    color: Colors.grey,
-                    size: 16,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 5),
-            Center(
-              child: Builder(
-                builder: (context) {
-                  final baseStyle = Theme.of(context).textTheme.bodyLarge;
-                  return RichText(
-                    text: TextSpan(
-                      style: baseStyle,
-                      children: <TextSpan>[
-                        TextSpan(
-                          text: amount,
-                          style: baseStyle?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        TextSpan(
-                          text: '.55',
-                          style: baseStyle?.copyWith(
-                            fontWeight: FontWeight.normal,
-                            fontSize: (baseStyle.fontSize ?? 24.0) * 0.75,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            Center(
-              child: Text(
-                budget,
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
-              ),
-            ),
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(5.0),
-              child: LinearProgressIndicator(
-                value: progressValue,
-                minHeight: 4.0,
-                backgroundColor: Colors.grey,
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -162,34 +123,22 @@ class _EntriesScreenState extends State<EntriesScreen> {
           child: Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 5),
-                    _buildSummaryCard(
-                      context: context,
-                      title: 'Total',
-                      amount: 'Rs. 19,000',
-                      budget: '9000/2,00,000',
-                      progressValue: 0.45,
-                    ),
-                  ],
+                child: SummaryCard(
+                  title: 'Total',
+                  amount: 'Rs. 19,000',
+                  budget: '9000/2,00,000',
+                  progressValue: 0.45,
+                  onMoreTap: () => _showDetailOptionsSheet(context),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 5),
-                    _buildSummaryCard(
-                      context: context,
-                      title: 'Today',
-                      amount: 'Rs. 5000',
-                      budget: '9000/2,00,000',
-                      progressValue: 0.45,
-                    ),
-                  ],
+                child: SummaryCard(
+                  title: 'Today',
+                  amount: 'Rs. 5000',
+                  budget: '9000/2,00,000',
+                  progressValue: 0.45,
+                  onMoreTap: () => _showDetailOptionsSheet(context),
                 ),
               ),
             ],
@@ -198,116 +147,19 @@ class _EntriesScreenState extends State<EntriesScreen> {
         const Divider(indent: 16.0, endIndent: 16.0, color: Colors.grey),
         const SizedBox(height: 10),
         Expanded(
-          child: ListView(
+          child: ListView.builder(
             padding: const EdgeInsets.only(top: 0, bottom: 96),
-            children: [
-              const SizedBox(height: 4),
-              EntryItem(
-                imagePath: 'assets/images/google_logo.png',
-                name: 'Flight Ticket',
-                description: 'Tokyo Flight',
-                amount: 'Rs 12,500',
-                convertedAmount: '¥ 21,250',
-              ),
-              EntryItem(
-                imagePath: 'assets/images/google_logo.png',
-                name: 'Hotel Booking',
-                description: 'Shinjuku Hotel',
-                amount: 'Rs 8,000',
-                convertedAmount: '¥ 13,600',
-              ),
-              EntryItem(
-                imagePath: 'assets/images/google_logo.png',
-                name: 'Restaurant',
-                description: 'Dinner at Senso-ji',
-                amount: 'Rs 2,500',
-                convertedAmount: '¥ 4,250',
-              ),
-              EntryItem(
-                imagePath: 'assets/images/google_logo.png',
-                name: 'Transport',
-                description: 'Taxi to Airport',
-                amount: 'Rs 1,200',
-                convertedAmount: '¥ 2,040',
-              ),
-              EntryItem(
-                imagePath: 'assets/images/google_logo.png',
-                name: 'Shopping',
-                description: 'Souvenirs',
-                amount: 'Rs 3,000',
-                convertedAmount: '¥ 5,100',
-              ),
-              EntryItem(
-                imagePath: 'assets/images/google_logo.png',
-                name: 'Shopping',
-                description: 'Souvenirs',
-                amount: 'Rs 3,000',
-                convertedAmount: '¥ 5,100',
-              ),
-              EntryItem(
-                imagePath: 'assets/images/google_logo.png',
-                name: 'Shopping',
-                description: 'Souvenirs',
-                amount: 'Rs 3,000',
-                convertedAmount: '¥ 5,100',
-              ),
-              EntryItem(
-                imagePath: 'assets/images/google_logo.png',
-                name: 'Shopping',
-                description: 'Souvenirs',
-                amount: 'Rs 3,000',
-                convertedAmount: '¥ 5,100',
-              ),
-              EntryItem(
-                imagePath: 'assets/images/google_logo.png',
-                name: 'Shopping',
-                description: 'Souvenirs',
-                amount: 'Rs 3,000',
-                convertedAmount: '¥ 5,100',
-              ),
-              EntryItem(
-                imagePath: 'assets/images/google_logo.png',
-                name: 'Shopping',
-                description: 'Souvenirs',
-                amount: 'Rs 3,000',
-                convertedAmount: '¥ 5,100',
-              ),
-              EntryItem(
-                imagePath: 'assets/images/google_logo.png',
-                name: 'Shopping',
-                description: 'Souvenirs',
-                amount: 'Rs 3,000',
-                convertedAmount: '¥ 5,100',
-              ),
-              EntryItem(
-                imagePath: 'assets/images/google_logo.png',
-                name: 'Shopping',
-                description: 'Souvenirs',
-                amount: 'Rs 3,000',
-                convertedAmount: '¥ 5,100',
-              ),
-              EntryItem(
-                imagePath: 'assets/images/google_logo.png',
-                name: 'Shopping',
-                description: 'Souvenirs',
-                amount: 'Rs 3,000',
-                convertedAmount: '¥ 5,100',
-              ),
-              EntryItem(
-                imagePath: 'assets/images/google_logo.png',
-                name: 'Shopping',
-                description: 'Souvenirs',
-                amount: 'Rs 3,000',
-                convertedAmount: '¥ 5,100',
-              ),
-              EntryItem(
-                imagePath: 'assets/images/google_logo.png',
-                name: 'Shopping',
-                description: 'Souvenirs',
-                amount: 'Rs 3,000',
-                convertedAmount: '¥ 5,100',
-              ),
-            ],
+            itemCount: _entries.length,
+            itemBuilder: (BuildContext context, int index) {
+              final entry = _entries[index];
+              return EntryItem(
+                imagePath: entry.imagePath,
+                name: entry.name,
+                description: entry.description,
+                amount: entry.amount,
+                convertedAmount: entry.convertedAmount,
+              );
+            },
           ),
         ),
       ],

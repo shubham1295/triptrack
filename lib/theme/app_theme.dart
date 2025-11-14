@@ -111,13 +111,13 @@ class AppTheme {
       scaffoldBackgroundColor: AppColorsDark.background,
       textTheme: _buildTextTheme(isDarkMode: true),
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColorsDark.primary,
-        foregroundColor: AppColorsDark.white,
+        backgroundColor: AppColorsDark.background,
+        foregroundColor: AppColorsDark.primary,
         elevation: 0,
         centerTitle: true,
         titleTextStyle: AppTextStyles.titleLarge(
           isDarkMode: true,
-        ).copyWith(color: AppColorsDark.white),
+        ).copyWith(color: AppColorsDark.primary),
       ),
       cardTheme: CardThemeData(
         color: AppColorsDark.lightGrey,
