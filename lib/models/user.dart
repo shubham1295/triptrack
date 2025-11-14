@@ -4,7 +4,7 @@ class User {
   final String email;
   final String name;
 
-  User({required this.id, required this.email, required this.name});
+  const User({required this.id, required this.email, required this.name});
 
   /// Create a User from JSON
   factory User.fromJson(Map<String, dynamic> json) {
