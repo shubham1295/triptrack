@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:triptrack/widgets/entry_item.dart';
 
 class EntriesScreen extends StatefulWidget {
   const EntriesScreen({super.key});
@@ -168,7 +169,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
                     _buildSummaryCard(
                       context: context,
                       title: 'Total',
-                      amount: 'Rs 19,000',
+                      amount: 'Rs. 19,000',
                       budget: '9000/2,00,000',
                       progressValue: 0.45,
                     ),
@@ -184,7 +185,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
                     _buildSummaryCard(
                       context: context,
                       title: 'Today',
-                      amount: 'Rs 5000',
+                      amount: 'Rs. 5000',
                       budget: '9000/2,00,000',
                       progressValue: 0.45,
                     ),
@@ -198,19 +199,113 @@ class _EntriesScreenState extends State<EntriesScreen> {
         const SizedBox(height: 10),
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.all(16.0),
-            children: const [
-              ListTile(
-                title: Text('Entry 1'),
-                subtitle: Text('Description goes here'),
+            padding: const EdgeInsets.only(top: 0, bottom: 96),
+            children: [
+              const SizedBox(height: 4),
+              EntryItem(
+                imagePath: 'assets/images/google_logo.png',
+                name: 'Flight Ticket',
+                description: 'Tokyo Flight',
+                amount: 'Rs 12,500',
+                convertedAmount: '¥ 21,250',
               ),
-              ListTile(
-                title: Text('Entry 2'),
-                subtitle: Text('Description goes here'),
+              EntryItem(
+                imagePath: 'assets/images/google_logo.png',
+                name: 'Hotel Booking',
+                description: 'Shinjuku Hotel',
+                amount: 'Rs 8,000',
+                convertedAmount: '¥ 13,600',
               ),
-              ListTile(
-                title: Text('Entry 3'),
-                subtitle: Text('Description goes here'),
+              EntryItem(
+                imagePath: 'assets/images/google_logo.png',
+                name: 'Restaurant',
+                description: 'Dinner at Senso-ji',
+                amount: 'Rs 2,500',
+                convertedAmount: '¥ 4,250',
+              ),
+              EntryItem(
+                imagePath: 'assets/images/google_logo.png',
+                name: 'Transport',
+                description: 'Taxi to Airport',
+                amount: 'Rs 1,200',
+                convertedAmount: '¥ 2,040',
+              ),
+              EntryItem(
+                imagePath: 'assets/images/google_logo.png',
+                name: 'Shopping',
+                description: 'Souvenirs',
+                amount: 'Rs 3,000',
+                convertedAmount: '¥ 5,100',
+              ),
+              EntryItem(
+                imagePath: 'assets/images/google_logo.png',
+                name: 'Shopping',
+                description: 'Souvenirs',
+                amount: 'Rs 3,000',
+                convertedAmount: '¥ 5,100',
+              ),
+              EntryItem(
+                imagePath: 'assets/images/google_logo.png',
+                name: 'Shopping',
+                description: 'Souvenirs',
+                amount: 'Rs 3,000',
+                convertedAmount: '¥ 5,100',
+              ),
+              EntryItem(
+                imagePath: 'assets/images/google_logo.png',
+                name: 'Shopping',
+                description: 'Souvenirs',
+                amount: 'Rs 3,000',
+                convertedAmount: '¥ 5,100',
+              ),
+              EntryItem(
+                imagePath: 'assets/images/google_logo.png',
+                name: 'Shopping',
+                description: 'Souvenirs',
+                amount: 'Rs 3,000',
+                convertedAmount: '¥ 5,100',
+              ),
+              EntryItem(
+                imagePath: 'assets/images/google_logo.png',
+                name: 'Shopping',
+                description: 'Souvenirs',
+                amount: 'Rs 3,000',
+                convertedAmount: '¥ 5,100',
+              ),
+              EntryItem(
+                imagePath: 'assets/images/google_logo.png',
+                name: 'Shopping',
+                description: 'Souvenirs',
+                amount: 'Rs 3,000',
+                convertedAmount: '¥ 5,100',
+              ),
+              EntryItem(
+                imagePath: 'assets/images/google_logo.png',
+                name: 'Shopping',
+                description: 'Souvenirs',
+                amount: 'Rs 3,000',
+                convertedAmount: '¥ 5,100',
+              ),
+              EntryItem(
+                imagePath: 'assets/images/google_logo.png',
+                name: 'Shopping',
+                description: 'Souvenirs',
+                amount: 'Rs 3,000',
+                convertedAmount: '¥ 5,100',
+              ),
+              EntryItem(
+                imagePath: 'assets/images/google_logo.png',
+                name: 'Shopping',
+                description: 'Souvenirs',
+                amount: 'Rs 3,000',
+                convertedAmount: '¥ 5,100',
+              ),
+              EntryItem(
+                imagePath: 'assets/images/google_logo.png',
+                name: 'Shopping',
+                description: 'Souvenirs',
+                amount: 'Rs 3,000',
+                convertedAmount: '¥ 5,100',
               ),
             ],
           ),
