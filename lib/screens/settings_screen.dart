@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:triptrack/services/theme_provider.dart';
 
-class SettingsScreen extends StatefulWidget {
+class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends State<SettingsScreen> {
-  bool _notificationsEnabled = true;
-  bool _darkModeEnabled = false;
-
-  @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.themeMode == ThemeMode.dark;
+
     return ListView(
       padding: const EdgeInsets.all(16.0),
       children: [
@@ -24,11 +21,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         SwitchListTile(
           title: const Text('Enable Notifications'),
           subtitle: const Text('Receive trip and budget alerts'),
-          value: _notificationsEnabled,
+          value: true, // Replace with actual notification state
           onChanged: (value) {
-            setState(() {
-              _notificationsEnabled = value;
-            });
+            // Handle notification state change
           },
         ),
         const Divider(),
@@ -39,11 +34,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         SwitchListTile(
           title: const Text('Dark Mode'),
           subtitle: const Text('Use dark theme'),
-          value: _darkModeEnabled,
+          value: isDarkMode,
           onChanged: (value) {
-            setState(() {
-              _darkModeEnabled = value;
-            });
+            themeProvider.toggleTheme();
           },
         ),
         const Divider(),
@@ -51,10 +44,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // About Section
         Text('About', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 12),
-        ListTile(
-          title: const Text('Version'),
-          subtitle: const Text('1.0.0'),
-          trailing: const Icon(Icons.info_outline),
+        const ListTile(
+          title: Text('Version'),
+          subtitle: Text('1.0.0'),
+          trailing: Icon(Icons.info_outline),
         ),
         ListTile(
           title: const Text('Privacy Policy'),

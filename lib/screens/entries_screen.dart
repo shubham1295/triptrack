@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:triptrack/models/entry.dart';
+import 'package:triptrack/widgets/entry_item.dart';
+import 'package:triptrack/widgets/summary_card.dart';
+import 'package:intl/intl.dart';
 
 class EntriesScreen extends StatefulWidget {
   const EntriesScreen({super.key});
@@ -8,6 +12,104 @@ class EntriesScreen extends StatefulWidget {
 }
 
 class _EntriesScreenState extends State<EntriesScreen> {
+  double _parseAmount(String amountString) {
+    final cleanedAmount = amountString
+        .replaceAll('Rs ', '')
+        .replaceAll(',', '');
+    return double.tryParse(cleanedAmount) ?? 0.0;
+  }
+
+  final List<Entry> _entries = [
+    Entry(
+      imagePath: 'assets/images/google_logo.png',
+      name: 'Flight Ticket',
+      description: 'Tokyo Flight',
+      amount: 'Rs 12,500',
+      convertedAmount: '¥ 21,250',
+      date: DateTime.now(),
+    ),
+    Entry(
+      imagePath: 'assets/images/google_logo.png',
+      name: 'Hotel Booking',
+      description: 'Shinjuku Hotel',
+      amount: 'Rs 8,000',
+      convertedAmount: '¥ 13,600',
+      date: DateTime.now(),
+    ),
+    Entry(
+      imagePath: 'assets/images/google_logo.png',
+      name: 'Restaurant',
+      description: 'Dinner at Senso-ji',
+      amount: 'Rs 2,500',
+      convertedAmount: '¥ 4,250',
+      date: DateTime.now().subtract(const Duration(days: 1)),
+    ),
+    Entry(
+      imagePath: 'assets/images/google_logo.png',
+      name: 'Transport',
+      description: 'Taxi to Airport',
+      amount: 'Rs 1,200',
+      convertedAmount: '¥ 2,040',
+      date: DateTime.now().subtract(const Duration(days: 1)),
+    ),
+    Entry(
+      imagePath: 'assets/images/google_logo.png',
+      name: 'Shopping',
+      description: 'Souvenirs',
+      amount: 'Rs 3,000',
+      convertedAmount: '¥ 5,100',
+      date: DateTime.now().subtract(const Duration(days: 2)),
+    ),
+    Entry(
+      imagePath: 'assets/images/google_logo.png',
+      name: 'Shopping',
+      description: 'Souvenirs',
+      amount: 'Rs 3,000',
+      convertedAmount: '¥ 5,100',
+      date: DateTime.now().subtract(const Duration(days: 2)),
+    ),
+    Entry(
+      imagePath: 'assets/images/google_logo.png',
+      name: 'Shopping',
+      description: 'Souvenirs',
+      amount: 'Rs 3,000',
+      convertedAmount: '¥ 5,100',
+      date: DateTime.now().subtract(const Duration(days: 2)),
+    ),
+  ];
+
+  Map<DateTime, List<Entry>> _groupedEntries = {};
+  Map<DateTime, double> _dailyTotals = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _groupEntriesByDate();
+  }
+
+  void _groupEntriesByDate() {
+    _groupedEntries.clear();
+    _dailyTotals.clear();
+
+    for (var entry in _entries) {
+      // Normalize date to remove time component for grouping
+      final date = DateTime(entry.date.year, entry.date.month, entry.date.day);
+
+      _groupedEntries.putIfAbsent(date, () => []).add(entry);
+      _dailyTotals.update(
+        date,
+        (value) => value + _parseAmount(entry.amount),
+        ifAbsent: () => _parseAmount(entry.amount),
+      );
+    }
+
+    // Sort dates in descending order
+    _groupedEntries = Map.fromEntries(
+      _groupedEntries.entries.toList()
+        ..sort((e1, e2) => e2.key.compareTo(e1.key)),
+    );
+  }
+
   void _showDetailOptionsSheet(BuildContext context) {
     const options = [
       'View Detailed Breakdown',
@@ -59,160 +161,122 @@ class _EntriesScreenState extends State<EntriesScreen> {
     );
   }
 
-  Widget _buildSummaryCard({
-    required BuildContext context,
-    required String title,
-    required String amount,
-    required String budget,
-    required double progressValue,
-  }) {
-    return Container(
-      height: 100,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
-                ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: () => _showDetailOptionsSheet(context),
-                  child: const Icon(
-                    Icons.keyboard_arrow_down,
-                    color: Colors.grey,
-                    size: 16,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 5),
-            Center(
-              child: Builder(
-                builder: (context) {
-                  final baseStyle = Theme.of(context).textTheme.bodyLarge;
-                  return RichText(
-                    text: TextSpan(
-                      style: baseStyle,
-                      children: <TextSpan>[
-                        TextSpan(
-                          text: amount,
-                          style: baseStyle?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        TextSpan(
-                          text: '.55',
-                          style: baseStyle?.copyWith(
-                            fontWeight: FontWeight.normal,
-                            fontSize: (baseStyle.fontSize ?? 24.0) * 0.75,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            Center(
-              child: Text(
-                budget,
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
-              ),
-            ),
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(5.0),
-              child: LinearProgressIndicator(
-                value: progressValue,
-                minHeight: 4.0,
-                backgroundColor: Colors.grey,
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
           child: Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 5),
-                    _buildSummaryCard(
-                      context: context,
-                      title: 'Total',
-                      amount: 'Rs 19,000',
-                      budget: '9000/2,00,000',
-                      progressValue: 0.45,
-                    ),
-                  ],
+                child: SummaryCard(
+                  title: 'Total',
+                  amount: 'Rs. 19,000',
+                  budget: '9000/2,00,000',
+                  progressValue: 0.45,
+                  onMoreTap: () => _showDetailOptionsSheet(context),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 5),
-                    _buildSummaryCard(
-                      context: context,
-                      title: 'Today',
-                      amount: 'Rs 5000',
-                      budget: '9000/2,00,000',
-                      progressValue: 0.45,
-                    ),
-                  ],
+                child: SummaryCard(
+                  title: 'Today',
+                  amount: 'Rs. 5000',
+                  budget: '9000/2,00,000',
+                  progressValue: 0.45,
+                  onMoreTap: () => _showDetailOptionsSheet(context),
                 ),
               ),
             ],
           ),
         ),
-        const Divider(indent: 16.0, endIndent: 16.0, color: Colors.grey),
-        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Theme.of(context).colorScheme.surface
+                : Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          // padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+          child: Center(
+            child: Text(
+              'Trip Ended',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
         Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(16.0),
-            children: const [
-              ListTile(
-                title: Text('Entry 1'),
-                subtitle: Text('Description goes here'),
-              ),
-              ListTile(
-                title: Text('Entry 2'),
-                subtitle: Text('Description goes here'),
-              ),
-              ListTile(
-                title: Text('Entry 3'),
-                subtitle: Text('Description goes here'),
-              ),
-            ],
+          child: ListView.builder(
+            padding: const EdgeInsets.only(top: 0, bottom: 96),
+            itemCount: _groupedEntries.keys.length,
+            itemBuilder: (BuildContext context, int index) {
+              final date = _groupedEntries.keys.elementAt(index);
+              final entriesForDate = _groupedEntries[date]!;
+              final totalAmount = _dailyTotals[date]!;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Theme.of(context).colorScheme.surface
+                          : Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(
+                        8.0,
+                      ), // Example radius
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          DateFormat('EEEE, MMM d, yyyy').format(date),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                        ),
+                        Text(
+                          'Rs ${totalAmount.toStringAsFixed(0)}', // Format as needed
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ...entriesForDate.asMap().entries.map((mapEntry) {
+                    final entryIndex = mapEntry.key;
+                    final entry = mapEntry.value;
+                    final isLastItem = entryIndex == entriesForDate.length - 1;
+                    return EntryItem(
+                      imagePath: entry.imagePath,
+                      name: entry.name,
+                      description: entry.description,
+                      amount: entry.amount,
+                      convertedAmount: entry.convertedAmount,
+                      isLastItem: isLastItem,
+                    );
+                  }),
+                  // const Divider(
+                  //   indent: 16.0,
+                  //   endIndent: 16.0,
+                  // ), // Separator between dates
+                ],
+              );
+            },
           ),
         ),
       ],
