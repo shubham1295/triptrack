@@ -4,6 +4,7 @@ class Entry {
   final String description;
   final String amount;
   final String convertedAmount;
+  final DateTime date;
 
   const Entry({
     required this.imagePath,
@@ -11,5 +12,6 @@ class Entry {
     required this.description,
     required this.amount,
     required this.convertedAmount,
+    required this.date,
   });
 }

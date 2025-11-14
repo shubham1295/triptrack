@@ -15,7 +15,9 @@ class AppDrawer extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            color: Theme.of(context).colorScheme.primary,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Theme.of(context).scaffoldBackgroundColor
+                : Theme.of(context).colorScheme.primary,
             child: Padding(
               padding: EdgeInsets.only(
                 top: MediaQuery.of(context).padding.top,
@@ -31,7 +33,9 @@ class AppDrawer extends StatelessWidget {
                       Text(
                         AppStrings.myTrips,
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onPrimary,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Theme.of(context).colorScheme.onSurface
+                              : Theme.of(context).colorScheme.onPrimary,
                           fontSize: AppConstants.myTripsFontSize,
                         ),
                       ),

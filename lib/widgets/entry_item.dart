@@ -7,6 +7,7 @@ class EntryItem extends StatelessWidget {
   final String amount;
   final String convertedAmount;
   final VoidCallback? onTap;
+  final bool isLastItem;
 
   const EntryItem({
     super.key,
@@ -16,6 +17,7 @@ class EntryItem extends StatelessWidget {
     required this.amount,
     this.onTap,
     required this.convertedAmount,
+    this.isLastItem = false,
   });
 
   // Note: conversion is currently hardcoded below. Replace with dynamic logic later.
@@ -111,12 +113,13 @@ class EntryItem extends StatelessWidget {
             ),
           ),
         ),
-        const Divider(
-          indent: 16.0,
-          endIndent: 16.0,
-          color: Colors.grey,
-          height: 1,
-        ),
+        if (!isLastItem)
+          const Divider(
+            indent: 16.0,
+            endIndent: 16.0,
+            color: Colors.grey,
+            height: 1,
+          ),
       ],
     );
   }
