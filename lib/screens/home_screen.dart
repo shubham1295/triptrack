@@ -4,6 +4,7 @@ import 'package:triptrack/theme/app_strings.dart';
 import 'package:triptrack/widgets/app_drawer.dart';
 import 'package:triptrack/screens/entries_screen.dart';
 import 'package:triptrack/screens/stats_screen.dart';
+import 'package:triptrack/screens/pick_category_screen.dart';
 import 'package:triptrack/screens/search_screen.dart';
 import 'package:triptrack/screens/settings_screen.dart';
 
@@ -86,7 +87,12 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton(
               onPressed: () {
-                // Handle floating action button tap
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PickCategoryScreen(),
+                  ),
+                );
               },
               child: const Icon(Icons.add),
             )
