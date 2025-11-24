@@ -85,7 +85,7 @@ class AppTheme {
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: AppColors.secondary,
+        backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: kBorderRadius),
