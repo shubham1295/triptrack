@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:triptrack/screens/add_trip_screen.dart'; // Import AddTripScreen
 import 'services/theme_provider.dart';
 import 'theme/app_theme.dart';
-import 'screens/login_screen.dart';
+import 'screens/login_screen.dart'; // Import LoginScreen
 
 void main() {
   runApp(
@@ -25,7 +26,11 @@ class MyApp extends StatelessWidget {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: themeProvider.themeMode,
-          home: const LoginScreen(),
+          initialRoute: LoginScreen.routeName, // Set initial route
+          routes: {
+            LoginScreen.routeName: (context) => const LoginScreen(),
+            AddTripScreen.routeName: (context) => const AddTripScreen(),
+          },
           debugShowCheckedModeBanner: true,
         );
       },

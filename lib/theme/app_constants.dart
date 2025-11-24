@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class AppConstants {
-  static const BorderRadius cardBorderRadius = BorderRadius.all(Radius.circular(10));
+  static const BorderRadius cardBorderRadius = BorderRadius.all(
+    Radius.circular(10),
+  );
   static const double avatarRadius = 25;
   static const double popupMenuIconSize = 20;
   static const double calendarIconSize = 12;
@@ -15,7 +17,7 @@ class AppConstants {
   static const double sizedBoxHeight = 20;
   static const double sizedBoxWidth = 4;
   static const double bottomNavBarSelectedItemAlpha = 0.6;
-  static const List<Map<String, dynamic>> categories = [
+  static final List<Map<String, dynamic>> categories = [
     {
       'name': 'Transportation',
       'icon': Icons.directions_car,
@@ -46,11 +48,7 @@ class AppConstants {
       'icon': Icons.local_activity,
       'color': Colors.pink.shade400,
     },
-    {
-      'name': 'Drinks',
-      'icon': Icons.local_bar,
-      'color': Colors.amber.shade400,
-    },
+    {'name': 'Drinks', 'icon': Icons.local_bar, 'color': Colors.amber.shade400},
     {'name': 'Coffee', 'icon': Icons.coffee, 'color': Colors.brown.shade400},
     {'name': 'Flight', 'icon': Icons.flight, 'color': Colors.cyan.shade400},
     {

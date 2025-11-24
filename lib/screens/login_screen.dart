@@ -7,6 +7,7 @@ import 'home_screen.dart';
 const double _kButtonWidth = 280.0;
 
 class LoginScreen extends StatelessWidget {
+  static const String routeName = '/login';
   const LoginScreen({super.key});
 
   void _navigateToHome(BuildContext context) {
