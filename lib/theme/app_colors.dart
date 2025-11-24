@@ -31,7 +31,7 @@ class AppColorsDark {
   static const Color primary = Color(0xFF336DF2);
 
   // Secondary color - a softer orange for dark mode
-  static const Color secondary = Color(0xFF336DF2);
+  static const Color secondary = Color(0xFF66B2FF);
 
   // Background color - a dark grey
   static const Color background = Color(0xFF181B28);

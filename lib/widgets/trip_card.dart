@@ -31,7 +31,7 @@ class TripCard extends StatelessWidget {
             backgroundImage: AssetImage(imageUrl),
             radius:
                 AppConstants.avatarRadius *
-                MediaQuery.of(context).textScaleFactor,
+                MediaQuery.of(context).textScaler.scale(1.0),
           ),
           const SizedBox(width: 5),
           Expanded(

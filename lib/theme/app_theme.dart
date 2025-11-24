@@ -71,24 +71,28 @@ class AppTheme {
           borderRadius: kBorderRadius,
           borderSide: BorderSide(color: AppColors.lightGrey),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: kBorderRadius,
-          borderSide: BorderSide(color: AppColors.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: kBorderRadius,
-          borderSide: const BorderSide(color: Colors.red),
-        ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 12,
         ),
+        labelStyle: AppTextStyles.bodyMedium(isDarkMode: false),
+        floatingLabelStyle: AppTextStyles.bodyMedium(isDarkMode: false),
+        hoverColor: AppColors.primary.withOpacity(0.05),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: kBorderRadius),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          side: BorderSide(color: AppColors.primary, width: 2),
+          shape: RoundedRectangleBorder(borderRadius: kBorderRadius),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          textStyle: AppTextStyles.labelLarge(isDarkMode: false),
+        ),
       ),
     );
   }
@@ -161,12 +165,24 @@ class AppTheme {
           horizontal: 16,
           vertical: 12,
         ),
+        labelStyle: AppTextStyles.bodyMedium(isDarkMode: true),
+        floatingLabelStyle: AppTextStyles.bodyMedium(isDarkMode: true),
+        hoverColor: AppColorsDark.primary.withOpacity(0.05),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: AppColorsDark.secondary,
         foregroundColor: AppColorsDark.white,
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: kBorderRadius),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColorsDark.primary,
+          side: BorderSide(color: AppColorsDark.primary, width: 2),
+          shape: RoundedRectangleBorder(borderRadius: kBorderRadius),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          textStyle: AppTextStyles.labelLarge(isDarkMode: true),
+        ),
       ),
     );
   }
