@@ -79,8 +79,8 @@ class _HomeScreenState extends State<HomeScreen> {
         currentIndex: _selectedIndex,
         selectedItemColor: Theme.of(context).colorScheme.primary,
         unselectedItemColor: Theme.of(context).colorScheme.onSurface.withAlpha(
-              (AppConstants.bottomNavBarSelectedItemAlpha * 255).round(),
-            ),
+          (AppConstants.bottomNavBarSelectedItemAlpha * 255).round(),
+        ),
         onTap: _onItemTapped,
       ),
       floatingActionButton: _selectedIndex == 0

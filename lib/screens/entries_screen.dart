@@ -79,7 +79,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
   ];
 
   Map<DateTime, List<Entry>> _groupedEntries = {};
-  Map<DateTime, double> _dailyTotals = {};
+  final Map<DateTime, double> _dailyTotals = {};
 
   @override
   void initState() {
