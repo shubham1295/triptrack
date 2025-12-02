@@ -100,6 +100,7 @@ class _AddTripScreenState extends State<AddTripScreen> {
                     const SizedBox(height: 8),
                     TextField(
                       controller: _tripNameController,
+                      textCapitalization: TextCapitalization.sentences,
                       onChanged: (value) {
                         if (_nameError) {
                           setState(() {

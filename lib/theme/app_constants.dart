@@ -77,4 +77,31 @@ class AppConstants {
       'color': Colors.deepOrange.shade400,
     },
   ];
+
+  static const Map<String, Map<String, String>> currencyData = {
+    // --- The World's Major Currencies ---
+
+    // North America
+    'USD': {'name': 'US Dollar', 'symbol': '\$'},
+    'CAD': {'name': 'Canadian Dollar', 'symbol': 'CA\$'},
+
+    // Europe
+    'EUR': {'name': 'Euro', 'symbol': '€'},
+    'GBP': {'name': 'British Pound', 'symbol': '£'},
+    'CHF': {'name': 'Swiss Franc', 'symbol': 'CHF'},
+    'SEK': {'name': 'Swedish Krona', 'symbol': 'kr'},
+    'NOK': {'name': 'Norwegian Krone', 'symbol': 'kr'},
+    'DKK': {'name': 'Danish Krone', 'symbol': 'kr'},
+
+    // Asia/Pacific
+    'JPY': {'name': 'Japanese Yen', 'symbol': '¥'},
+    'AUD': {'name': 'Australian Dollar', 'symbol': 'A\$'},
+    'NZD': {'name': 'New Zealand Dollar', 'symbol': 'NZ\$'},
+    'SGD': {'name': 'Singapore Dollar', 'symbol': 'S\$'},
+    'HKD': {'name': 'Hong Kong Dollar', 'symbol': 'HK\$'},
+
+    // Key Emerging Market Currencies (High Volume/Geographic Importance)
+    'CNY': {'name': 'Chinese Yuan', 'symbol': '¥'},
+    'INR': {'name': 'Indian Rupee', 'symbol': '₹'},
+  };
 }

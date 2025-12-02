@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:triptrack/screens/currency_selection_screen.dart';
 
 class TravelDatesScreen extends StatefulWidget {
   final String tripName;
@@ -15,36 +16,60 @@ class _TravelDatesScreenState extends State<TravelDatesScreen> {
   DateTime? _startDate;
   DateTime? _endDate;
 
-  Future<void> _selectDate(BuildContext context, bool isStart) async {
-    final DateTime? picked = await showDatePicker(
+  Future<void> _selectDateRange(BuildContext context) async {
+    final theme = Theme.of(context);
+    final now = DateTime.now();
+    final DateTimeRange? picked = await showDateRangePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
+      initialDateRange: _startDate != null && _endDate != null
+          ? DateTimeRange(start: _startDate!, end: _endDate!)
+          : null,
+      firstDate: DateTime(now.year, now.month - 2, now.day),
+      lastDate: DateTime(now.year + 5, now.month, now.day),
+      builder: (context, child) {
+        return Theme(
+          data: theme.copyWith(
+            colorScheme: theme.colorScheme.copyWith(
+              primary: theme.colorScheme.primary,
+              onPrimary: theme.colorScheme.onPrimary,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
-        if (isStart) {
-          _startDate = picked;
-          // If end date is before start date, reset end date
-          if (_endDate != null && _endDate!.isBefore(_startDate!)) {
-            _endDate = null;
-          }
-        } else {
-          _endDate = picked;
-        }
+        _startDate = picked.start;
+        _endDate = picked.end;
       });
     }
   }
 
   void _continue() {
-    // TODO: Implement continue logic with dates
-    print('Continue with dates: Start: $_startDate, End: $_endDate');
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CurrencySelectionScreen(
+          tripName: widget.tripName,
+          imagePath: widget.imagePath,
+          startDate: _startDate,
+          endDate: _endDate,
+        ),
+      ),
+    );
   }
 
   void _skip() {
-    // TODO: Implement skip logic
-    print('Skip tapped');
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CurrencySelectionScreen(
+          tripName: widget.tripName,
+          imagePath: widget.imagePath,
+          startDate: null,
+          endDate: null,
+        ),
+      ),
+    );
   }
 
   @override
@@ -79,18 +104,71 @@ class _TravelDatesScreenState extends State<TravelDatesScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _DatePickerButton(
-                      label: 'Start Date',
-                      date: _startDate,
-                      onTap: () => _selectDate(context, true),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _DatePickerButton(
-                      label: 'End Date',
-                      date: _endDate,
-                      onTap: () => _selectDate(context, false),
+                    child: InkWell(
+                      onTap: () => _selectDateRange(context),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            Column(
+                              children: [
+                                const Text(
+                                  'Start Date',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _startDate != null
+                                      ? DateFormat(
+                                          'dd/MMM/yyyy',
+                                        ).format(_startDate!)
+                                      : 'Select',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Icon(Icons.arrow_forward, color: Colors.grey),
+                            Column(
+                              children: [
+                                const Text(
+                                  'End Date',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _endDate != null
+                                      ? DateFormat(
+                                          'dd/MMM/yyyy',
+                                        ).format(_endDate!)
+                                      : 'Select',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -138,58 +216,6 @@ class _TravelDatesScreenState extends State<TravelDatesScreen> {
               const SizedBox(height: 16),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DatePickerButton extends StatelessWidget {
-  final String label;
-  final DateTime? date;
-  final VoidCallback onTap;
-
-  const _DatePickerButton({
-    required this.label,
-    required this.date,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey.shade300),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  date != null
-                      ? DateFormat('dd/MMM/yyyy').format(date!)
-                      : 'Select Date',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const Icon(Icons.calendar_today, size: 18),
-              ],
-            ),
-          ],
         ),
       ),
     );

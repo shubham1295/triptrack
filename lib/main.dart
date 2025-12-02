@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:triptrack/screens/add_trip_screen.dart'; // Import AddTripScreen
+import 'package:triptrack/screens/currency_selection_screen.dart';
+import 'package:triptrack/screens/currency_list_screen.dart'; // Import CurrencyListScreen
 import 'services/theme_provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/login_screen.dart'; // Import LoginScreen
@@ -30,6 +32,7 @@ class MyApp extends StatelessWidget {
           routes: {
             LoginScreen.routeName: (context) => const LoginScreen(),
             AddTripScreen.routeName: (context) => const AddTripScreen(),
+            CurrencyListScreen.routeName: (context) => const CurrencyListScreen(),
           },
           debugShowCheckedModeBanner: true,
         );
