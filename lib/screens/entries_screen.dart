@@ -79,7 +79,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
   ];
 
   Map<DateTime, List<Entry>> _groupedEntries = {};
-  Map<DateTime, double> _dailyTotals = {};
+  final Map<DateTime, double> _dailyTotals = {};
 
   @override
   void initState() {
@@ -121,35 +121,76 @@ class _EntriesScreenState extends State<EntriesScreen> {
 
     showModalBottomSheet(
       context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
+      ),
       builder: (BuildContext bc) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
+            final colorScheme = Theme.of(context).colorScheme;
+            final textTheme = Theme.of(context).textTheme;
+
             return Container(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 24.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(
-                    'Select an Option',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+                  Center(
+                    child: Text(
+                      'Select an Option',
+                      style: textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
                     ),
                   ),
-                  const Divider(),
+                  const SizedBox(height: 16),
                   ...options.map((optionText) {
                     final isSelected = currentSelection == optionText;
 
-                    return ListTile(
-                      title: Text(optionText),
-                      trailing: isSelected
-                          ? const Icon(Icons.check, color: Colors.blue)
-                          : null,
-                      onTap: () {
-                        setState(() {
-                          currentSelection = optionText;
-                        });
-                      },
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8.0),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? colorScheme.primaryContainer
+                            : colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(12.0),
+                        border: isSelected
+                            ? Border.all(color: colorScheme.primary, width: 1)
+                            : null,
+                      ),
+                      child: ListTile(
+                        title: Text(
+                          optionText,
+                          style: textTheme.bodyLarge?.copyWith(
+                            color: isSelected
+                                ? colorScheme.onPrimaryContainer
+                                : colorScheme.onSurface,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                        trailing: isSelected
+                            ? Icon(
+                                Icons.check_circle_rounded,
+                                color: colorScheme.primary,
+                              )
+                            : null,
+                        onTap: () {
+                          setState(() {
+                            currentSelection = optionText;
+                          });
+                          // Add logic to handle selection if needed
+                          // Navigator.pop(context); // Optional: close on select
+                        },
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),
+                      ),
                     );
                   }),
                 ],
@@ -163,10 +204,14 @@ class _EntriesScreenState extends State<EntriesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       children: [
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+          padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 12.0),
           child: Row(
             children: [
               Expanded(
@@ -178,7 +223,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
                   onMoreTap: () => _showDetailOptionsSheet(context),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: SummaryCard(
                   title: 'Today',
@@ -192,27 +237,42 @@ class _EntriesScreenState extends State<EntriesScreen> {
           ),
         ),
         Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
           decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Theme.of(context).colorScheme.surface
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          // padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          margin: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-          child: Center(
-            child: Text(
-              'Trip Ended',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontWeight: FontWeight.bold,
-              ),
+            color: isDark
+                ? colorScheme.surfaceContainerHighest
+                : colorScheme.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12.0),
+            border: Border.all(
+              color: isDark
+                  ? Colors.transparent
+                  : colorScheme.primary.withValues(alpha: 0.2),
             ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.check_circle_outline_rounded,
+                size: 20,
+                color: colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Trip Ended',
+                style: textTheme.titleMedium?.copyWith(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         ),
         Expanded(
           child: ListView.builder(
-            padding: const EdgeInsets.only(top: 0, bottom: 96),
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.only(top: 8, bottom: 96),
             itemCount: _groupedEntries.keys.length,
             itemBuilder: (BuildContext context, int index) {
               final date = _groupedEntries.keys.elementAt(index);
@@ -222,37 +282,36 @@ class _EntriesScreenState extends State<EntriesScreen> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? Theme.of(context).colorScheme.surface
-                          : Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(
-                        8.0,
-                      ), // Example radius
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 8.0,
-                    ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          DateFormat('EEEE, MMM d, yyyy').format(date),
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12.0,
+                            vertical: 6.0,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? colorScheme.surfaceContainerHighest
+                                : colorScheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(20.0),
+                          ),
+                          child: Text(
+                            DateFormat('EEEE, MMM d').format(date),
+                            style: textTheme.titleMedium?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ),
                         ),
                         Text(
-                          'Rs ${totalAmount.toStringAsFixed(0)}', // Format as needed
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
+                          'Rs ${totalAmount.toStringAsFixed(0)}',
+                          style: textTheme.titleMedium?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.normal,
+                          ),
                         ),
                       ],
                     ),
@@ -270,10 +329,6 @@ class _EntriesScreenState extends State<EntriesScreen> {
                       isLastItem: isLastItem,
                     );
                   }),
-                  // const Divider(
-                  //   indent: 16.0,
-                  //   endIndent: 16.0,
-                  // ), // Separator between dates
                 ],
               );
             },

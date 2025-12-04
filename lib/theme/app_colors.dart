@@ -28,13 +28,13 @@ class AppColorsDark {
   AppColorsDark._(); // Private constructor to prevent instantiation
 
   // Primary color - a slightly lighter blue for dark mode
-  static const Color primary = Color(0xFF4DA6FF);
+  static const Color primary = Color(0xFF336DF2);
 
   // Secondary color - a softer orange for dark mode
-  static const Color secondary = Color(0xFF4D9BF7);
+  static const Color secondary = Color(0xFF66B2FF);
 
   // Background color - a dark grey
-  static const Color background = Color(0xFF121212);
+  static const Color background = Color(0xFF181B28);
 
   // Text color - a light grey for readability on dark backgrounds
   static const Color text = Color(0xFFE0E0E0);

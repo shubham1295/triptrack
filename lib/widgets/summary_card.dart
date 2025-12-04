@@ -18,88 +18,93 @@ class SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Container(
-      height: 100,
+      padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
-            spreadRadius: 2,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        color: colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(color: Colors.grey, fontSize: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: textTheme.labelMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
                 ),
-                const Spacer(),
-                GestureDetector(
-                  onTap: onMoreTap,
-                  child: const Icon(
-                    Icons.keyboard_arrow_down,
-                    color: Colors.grey,
+              ),
+              GestureDetector(
+                onTap: onMoreTap,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerHighest,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    color: colorScheme.onSurfaceVariant,
                     size: 16,
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 5),
-            Center(
-              child: Builder(
-                builder: (context) {
-                  final baseStyle = Theme.of(context).textTheme.bodyLarge;
-                  return RichText(
-                    text: TextSpan(
-                      style: baseStyle,
-                      children: <TextSpan>[
-                        TextSpan(
-                          text: amount,
-                          style: baseStyle?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        TextSpan(
-                          text: '.55',
-                          style: baseStyle?.copyWith(
-                            fontWeight: FontWeight.normal,
-                            fontSize: (baseStyle.fontSize ?? 24.0) * 0.75,
-                          ),
-                        ),
-                      ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    amount,
+                    style: textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurface,
                     ),
-                  );
-                },
+                  ),
+                  Text(
+                    '.55',
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            Center(
-              child: Text(
+              const SizedBox(height: 4),
+              Text(
                 budget,
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                style: textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
               ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8.0),
+            child: LinearProgressIndicator(
+              value: progressValue,
+              minHeight: 6.0,
+              backgroundColor: colorScheme.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
             ),
-            const SizedBox(height: 10),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(5.0),
-              child: LinearProgressIndicator(
-                value: progressValue,
-                minHeight: 4.0,
-                backgroundColor: Colors.grey,
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
