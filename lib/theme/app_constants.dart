@@ -17,6 +17,7 @@ class AppConstants {
   static const double sizedBoxHeight = 20;
   static const double sizedBoxWidth = 4;
   static const double bottomNavBarSelectedItemAlpha = 0.6;
+  static const Color appBarBackgroundColorLight = Color(0xFFE8EAED);
   static final List<Map<String, dynamic>> categories = [
     {
       'name': 'Transportation',

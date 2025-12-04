@@ -6,81 +6,114 @@ class PickCategoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Pick a category')),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: theme.brightness == Brightness.light
+            ? AppConstants.appBarBackgroundColorLight
+            : colorScheme.surfaceContainer,
+        iconTheme: IconThemeData(color: colorScheme.primary),
+        title: Text(
+          'Pick a Category',
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: colorScheme.primary,
+          ),
+        ),
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search category',
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(25.0)),
-                  ),
+            // Search Field
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'Search category',
+                hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
+                prefixIcon: Icon(
+                  Icons.search_rounded,
+                  color: colorScheme.primary,
+                ),
+                filled: true,
+                fillColor: colorScheme.surfaceContainerLow,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16.0),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16.0),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16.0),
+                  borderSide: BorderSide(color: colorScheme.primary, width: 2),
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8.0,
-                vertical: 8.0,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  ElevatedButton.icon(
+            const SizedBox(height: 16),
+            // Action Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
                     onPressed: () {
                       // Handle Change order
                     },
-                    style: ElevatedButton.styleFrom(
-                      visualDensity:
-                          VisualDensity.compact, // Makes button smaller
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25.0),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 16,
                       ),
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer,
-                      foregroundColor: Theme.of(
-                        context,
-                      ).colorScheme.onPrimaryContainer,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      side: BorderSide(
+                        color: colorScheme.primary.withValues(alpha: 0.5),
+                      ),
+                      foregroundColor: colorScheme.primary,
                     ),
-                    icon: const Icon(Icons.swap_vert, size: 18),
-                    label: const Text('Change order'),
+                    icon: const Icon(Icons.swap_vert_rounded, size: 20),
+                    label: const Text('Change Order'),
                   ),
-                  const SizedBox(width: 8),
-                  ElevatedButton.icon(
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
                     onPressed: () {
                       // Handle Edit Categories
                     },
-                    style: ElevatedButton.styleFrom(
-                      visualDensity:
-                          VisualDensity.compact, // Makes button smaller
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(25.0),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 16,
                       ),
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.primaryContainer,
-                      foregroundColor: Theme.of(
-                        context,
-                      ).colorScheme.onPrimaryContainer,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.0),
+                      ),
+                      side: BorderSide(
+                        color: colorScheme.primary.withValues(alpha: 0.5),
+                      ),
+                      foregroundColor: colorScheme.primary,
                     ),
-                    icon: const Icon(Icons.edit, size: 18),
-                    label: const Text('Edit Categories'),
+                    icon: const Icon(Icons.edit_rounded, size: 20),
+                    label: const Text('Edit'),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+            const SizedBox(height: 20),
+            // Categories Grid
             Expanded(
               child: GridView.builder(
+                physics: const BouncingScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
-                  childAspectRatio: 1.2,
+                  childAspectRatio: 1.0,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
                 ),
                 itemCount: AppConstants.categories.length,
                 itemBuilder: (context, index) {
@@ -89,23 +122,47 @@ class PickCategoryScreen extends StatelessWidget {
                     onTap: () {
                       // Handle category tap
                     },
-                    splashColor: Theme.of(context).primaryColorLight,
-                    child: SizedBox(
-                      width: 80,
-                      height: 80,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainer,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.5,
+                          ),
+                        ),
+                      ),
                       child: Column(
-                        mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            category['icon'] as IconData,
-                            color: category['color'] as Color,
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: (category['color'] as Color).withValues(
+                                alpha: 0.15,
+                              ),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              category['icon'] as IconData,
+                              color: category['color'] as Color,
+                              size: 28,
+                            ),
                           ),
                           const SizedBox(height: 8),
-                          Text(
-                            category['name'] as String,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 12),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Text(
+                              category['name'] as String,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
                           ),
                         ],
                       ),

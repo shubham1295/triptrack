@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Theme.of(context).brightness == Brightness.light
-            ? const Color(0xFFE8EAED)
+            ? AppConstants.appBarBackgroundColorLight
             : Theme.of(context).colorScheme.surfaceContainer,
         surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
         iconTheme: IconThemeData(color: Theme.of(context).colorScheme.primary),
