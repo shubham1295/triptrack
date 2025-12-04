@@ -26,7 +26,7 @@ class AppDrawer extends StatelessWidget {
                       end: Alignment.bottomRight,
                       colors: [
                         theme.colorScheme.primary,
-                        theme.colorScheme.primary.withOpacity(0.6),
+                        theme.colorScheme.primaryContainer,
                       ],
                     ),
               color: isDark ? theme.scaffoldBackgroundColor : null,
@@ -68,40 +68,48 @@ class AppDrawer extends StatelessWidget {
                     Container(
                       decoration: BoxDecoration(
                         color: isDark
-                            ? theme.colorScheme.surface.withOpacity(0.3)
-                            : Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(12),
+                            ? theme.colorScheme.surface.withValues(alpha: 0.3)
+                            : Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: isDark
-                              ? theme.colorScheme.primary.withOpacity(0.3)
-                              : Colors.white.withOpacity(0.3),
-                          width: 1,
+                              ? theme.colorScheme.primary.withValues(alpha: 0.3)
+                              : Colors.white.withValues(alpha: 0.3),
+                          width: 1.5,
                         ),
                       ),
                       child: Column(
                         children: [
                           Padding(
-                            padding: const EdgeInsets.all(8),
+                            padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
                             child: Row(
                               children: [
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
+                                    horizontal: 10,
+                                    vertical: 5,
                                   ),
                                   decoration: BoxDecoration(
                                     color: theme.colorScheme.secondary,
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: theme.colorScheme.secondary
+                                            .withValues(alpha: 0.3),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(
                                         Icons.circle,
-                                        size: 12,
+                                        size: 10,
                                         color: theme.colorScheme.onSecondary,
                                       ),
-                                      const SizedBox(width: 4),
+                                      const SizedBox(width: 5),
                                       Text(
                                         'Active',
                                         style: theme.textTheme.labelSmall
@@ -204,7 +212,7 @@ class _AddTripButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: theme.colorScheme.secondary.withOpacity(0.3),
+                color: theme.colorScheme.secondary.withValues(alpha: 0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),

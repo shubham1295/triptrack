@@ -35,24 +35,46 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Theme.of(context).brightness == Brightness.light
+            ? const Color(0xFFE8EAED)
+            : Theme.of(context).colorScheme.surfaceContainer,
+        surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
+        iconTheme: IconThemeData(color: Theme.of(context).colorScheme.primary),
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
+            icon: const Icon(Icons.menu_rounded),
+            tooltip: 'Menu',
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Japan'),
-            const Spacer(),
-            IconButton(
-              icon: const Icon(Icons.settings),
-              onPressed: () {
-                // Handle settings icon tap
-              },
+            Icon(
+              Icons.location_on_rounded,
+              size: 20,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              'Japan',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_rounded),
+            tooltip: 'Settings',
+            onPressed: () {
+              // Navigate to settings or handle settings action
+            },
+          ),
+        ],
       ),
       drawer: const AppDrawer(),
       body: _widgetOptions.elementAt(_selectedIndex),
@@ -79,8 +101,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Theme.of(context).colorScheme.onSurface.withAlpha(
-          (AppConstants.bottomNavBarSelectedItemAlpha * 255).round(),
+        unselectedItemColor: Theme.of(context).colorScheme.onSurface.withValues(
+          alpha: AppConstants.bottomNavBarSelectedItemAlpha,
         ),
         onTap: _onItemTapped,
       ),
