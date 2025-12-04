@@ -47,6 +47,14 @@ class _CurrencySelectionScreenState extends State<CurrencySelectionScreen> {
         elevation: 0,
         foregroundColor: theme.colorScheme.onSurface,
         leading: const BackButton(),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(

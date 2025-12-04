@@ -45,7 +45,8 @@ class _SetBudgetScreenState extends State<SetBudgetScreen> {
     if (totalBudget != null &&
         widget.startDate != null &&
         widget.endDate != null) {
-      final difference = widget.endDate!.difference(widget.startDate!).inDays + 1;
+      final difference =
+          widget.endDate!.difference(widget.startDate!).inDays + 1;
       if (difference > 0) {
         final dailyBudget = totalBudget / difference;
         _dailyBudgetController.text = dailyBudget.toStringAsFixed(2);
@@ -66,6 +67,14 @@ class _SetBudgetScreenState extends State<SetBudgetScreen> {
         elevation: 0,
         foregroundColor: theme.colorScheme.onSurface,
         leading: const BackButton(),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -135,10 +144,7 @@ class _SetBudgetScreenState extends State<SetBudgetScreen> {
                         showDailyBudget
                             ? 'Enter your total budget, and the daily budget will be calculated for you (Total Budget / number of days).'
                             : 'You can set a total budget for your trip.',
-                        style: TextStyle(
-                          color: Colors.blue[900],
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.blue[900], fontSize: 14),
                       ),
                     ),
                   ],

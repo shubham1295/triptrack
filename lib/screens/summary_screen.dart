@@ -32,6 +32,14 @@ class SummaryScreen extends StatelessWidget {
         elevation: 0,
         foregroundColor: theme.colorScheme.onSurface,
         leading: const BackButton(),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -51,37 +59,55 @@ class SummaryScreen extends StatelessWidget {
                 style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 30),
-              Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey.shade200),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      _buildSummaryItem('Trip Name:', name),
-                      const Divider(),
+                child: Column(
+                  children: [
+                    _buildSummaryItem('Trip Name', name, theme),
+                    const Divider(height: 32),
+                    _buildSummaryItem(
+                      'Home Currency',
+                      '$homeCurrency ($currencySymbol)',
+                      theme,
+                    ),
+                    if (startDate != null && endDate != null) ...[
+                      const Divider(height: 32),
                       _buildSummaryItem(
-                          'Home Currency:', '$homeCurrency ($currencySymbol)'),
-                      if (startDate != null && endDate != null) ...[
-                        const Divider(),
-                        _buildSummaryItem('Date Range:',
-                            '${DateFormat('dd/MMM/yyyy').format(startDate!)} - ${DateFormat('dd/MMM/yyyy').format(endDate!)}'),
-                      ],
-                      if (totalBudget > 0) ...[
-                        const Divider(),
-                        _buildSummaryItem(
-                            'Total Budget:', totalBudget.toStringAsFixed(2)),
-                      ],
-                      if (dailyBudget > 0) ...[
-                        const Divider(),
-                        _buildSummaryItem(
-                            'Daily Budget:', dailyBudget.toStringAsFixed(2)),
-                      ],
+                        'Date Range',
+                        '${DateFormat('dd MMM yyyy').format(startDate!)} - ${DateFormat('dd MMM yyyy').format(endDate!)}',
+                        theme,
+                      ),
                     ],
-                  ),
+                    if (totalBudget > 0) ...[
+                      const Divider(height: 32),
+                      _buildSummaryItem(
+                        'Total Budget',
+                        '$currencySymbol${totalBudget.toStringAsFixed(2)}',
+                        theme,
+                      ),
+                    ],
+                    if (dailyBudget > 0) ...[
+                      const Divider(height: 32),
+                      _buildSummaryItem(
+                        'Daily Budget',
+                        '$currencySymbol${dailyBudget.toStringAsFixed(2)}',
+                        theme,
+                      ),
+                    ],
+                  ],
                 ),
               ),
               const Spacer(),
@@ -105,27 +131,27 @@ class SummaryScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSummaryItem(String title, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16.0,
-              fontWeight: FontWeight.bold,
-            ),
+  Widget _buildSummaryItem(String title, String value, ThemeData theme) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey[600],
+            fontWeight: FontWeight.w500,
           ),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 16.0,
-            ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: theme.colorScheme.onSurface,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
