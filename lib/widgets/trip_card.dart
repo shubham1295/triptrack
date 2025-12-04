@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:triptrack/theme/app_constants.dart';
 import 'package:triptrack/theme/app_strings.dart';
 
 class TripCard extends StatelessWidget {
@@ -7,6 +6,7 @@ class TripCard extends StatelessWidget {
   final String title;
   final String date;
   final String budget;
+  final bool isInDrawer;
 
   const TripCard({
     super.key,
@@ -14,26 +14,50 @@ class TripCard extends StatelessWidget {
     required this.title,
     required this.date,
     required this.budget,
+    this.isInDrawer = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardTheme.color,
-        borderRadius: AppConstants.cardBorderRadius,
-        border: Border.all(color: Theme.of(context).colorScheme.outline),
+        color: theme.cardTheme.color,
+        borderRadius: BorderRadius.circular(12),
+        border: isInDrawer
+            ? null
+            : Border.all(color: theme.colorScheme.outline.withOpacity(0.2)),
+        boxShadow: isInDrawer
+            ? null
+            : [
+                BoxShadow(
+                  color: theme.colorScheme.shadow.withOpacity(0.08),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundImage: AssetImage(imageUrl),
-            radius:
-                AppConstants.avatarRadius *
-                MediaQuery.of(context).textScaleFactor,
+          Container(
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: theme.colorScheme.primary.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: CircleAvatar(
+              backgroundImage: AssetImage(imageUrl),
+              radius: 28,
+            ),
           ),
-          const SizedBox(width: 5),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,21 +67,23 @@ class TripCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         title,
-                        style: TextStyle(
-                          fontSize: 15,
+                        style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
+                          color: theme.colorScheme.onSurface,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     SizedBox(
-                      // Added const here
-                      width: 35, // Adjust as needed
-                      height: 30, // Adjust as needed
+                      width: 35,
+                      height: 30,
                       child: PopupMenuButton<String>(
-                        iconSize:
-                            AppConstants.popupMenuIconSize, // Made smaller
+                        iconSize: 20,
+                        padding: EdgeInsets.zero,
+                        icon: Icon(
+                          Icons.more_vert,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                         onSelected: (String result) {
                           // Handle selection
                         },
@@ -76,29 +102,43 @@ class TripCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 6),
                 Row(
                   children: [
                     Icon(
                       Icons.calendar_month_outlined,
-                      size: AppConstants.calendarIconSize,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      size: 14,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      date,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        date,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                Text(
-                  budget,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.account_balance_wallet_outlined,
+                      size: 14,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        budget,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
