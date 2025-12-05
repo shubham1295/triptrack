@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:triptrack/theme/app_constants.dart';
+import 'package:triptrack/models/entry.dart';
 import 'package:triptrack/theme/app_strings.dart';
 import 'package:triptrack/widgets/app_drawer.dart';
-import 'package:triptrack/screens/entries_screen.dart';
-import 'package:triptrack/screens/stats_screen.dart';
-import 'package:triptrack/screens/pick_category_screen.dart';
-import 'package:triptrack/screens/search_screen.dart';
-import 'package:triptrack/screens/settings_screen.dart';
+import 'package:triptrack/screens/entry/entries_screen.dart';
+import 'package:triptrack/screens/home/stats_screen.dart';
+import 'package:triptrack/screens/entry/pick_category_screen.dart';
+import 'package:triptrack/screens/home/search_screen.dart';
+import 'package:triptrack/screens/settings/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,12 +18,13 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  final GlobalKey<EntriesScreenState> _entriesScreenKey = GlobalKey();
 
-  static const List<Widget> _widgetOptions = <Widget>[
-    EntriesScreen(),
-    StatsScreen(),
-    SearchScreen(),
-    SettingsScreen(),
+  late final List<Widget> _widgetOptions = <Widget>[
+    EntriesScreen(key: _entriesScreenKey),
+    const StatsScreen(),
+    const SearchScreen(),
+    const SettingsScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -108,13 +110,16 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton(
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const PickCategoryScreen(),
                   ),
                 );
+                if (result is Entry && _entriesScreenKey.currentState != null) {
+                  _entriesScreenKey.currentState!.addEntry(result);
+                }
               },
               child: const Icon(Icons.add),
             )

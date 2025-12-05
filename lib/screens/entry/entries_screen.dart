@@ -1,91 +1,116 @@
 import 'package:flutter/material.dart';
-import 'package:triptrack/models/entry.dart';
-import 'package:triptrack/widgets/entry_item.dart';
-import 'package:triptrack/widgets/summary_card.dart';
 import 'package:intl/intl.dart';
+import '../../models/entry.dart';
+import '../../theme/app_constants.dart';
+import '../../widgets/entry_item.dart';
+import '../../widgets/summary_card.dart';
 
 class EntriesScreen extends StatefulWidget {
+  static const routeName = '/entries';
   const EntriesScreen({super.key});
 
   @override
-  State<EntriesScreen> createState() => _EntriesScreenState();
+  State<EntriesScreen> createState() => EntriesScreenState();
 }
 
-class _EntriesScreenState extends State<EntriesScreen> {
-  double _parseAmount(String amountString) {
-    final cleanedAmount = amountString
-        .replaceAll('Rs ', '')
-        .replaceAll(',', '');
-    return double.tryParse(cleanedAmount) ?? 0.0;
+class EntriesScreenState extends State<EntriesScreen> {
+  // Helper to create dummy entry
+  Entry _createDummyEntry({
+    required String id,
+    required String categoryName,
+    required double amount,
+    required DateTime date,
+    String? notes,
+  }) {
+    final category = AppConstants.categories.firstWhere(
+      (c) => c['name'] == categoryName,
+      orElse: () => AppConstants.categories.first,
+    );
+
+    return Entry(
+      id: id,
+      amount: amount,
+      currency: 'INR',
+      exchangeRate: 1.7,
+      category: category,
+      date: date,
+      notes: notes,
+      paymentMode: 'Cash',
+    );
   }
 
-  final List<Entry> _entries = [
-    Entry(
-      imagePath: 'assets/images/google_logo.png',
-      name: 'Flight Ticket',
-      description: 'Tokyo Flight',
-      amount: 'Rs 12,500',
-      convertedAmount: '¥ 21,250',
-      date: DateTime.now(),
-    ),
-    Entry(
-      imagePath: 'assets/images/google_logo.png',
-      name: 'Hotel Booking',
-      description: 'Shinjuku Hotel',
-      amount: 'Rs 8,000',
-      convertedAmount: '¥ 13,600',
-      date: DateTime.now(),
-    ),
-    Entry(
-      imagePath: 'assets/images/google_logo.png',
-      name: 'Restaurant',
-      description: 'Dinner at Senso-ji',
-      amount: 'Rs 2,500',
-      convertedAmount: '¥ 4,250',
-      date: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-    Entry(
-      imagePath: 'assets/images/google_logo.png',
-      name: 'Transport',
-      description: 'Taxi to Airport',
-      amount: 'Rs 1,200',
-      convertedAmount: '¥ 2,040',
-      date: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-    Entry(
-      imagePath: 'assets/images/google_logo.png',
-      name: 'Shopping',
-      description: 'Souvenirs',
-      amount: 'Rs 3,000',
-      convertedAmount: '¥ 5,100',
-      date: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-    Entry(
-      imagePath: 'assets/images/google_logo.png',
-      name: 'Shopping',
-      description: 'Souvenirs',
-      amount: 'Rs 3,000',
-      convertedAmount: '¥ 5,100',
-      date: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-    Entry(
-      imagePath: 'assets/images/google_logo.png',
-      name: 'Shopping',
-      description: 'Souvenirs',
-      amount: 'Rs 3,000',
-      convertedAmount: '¥ 5,100',
-      date: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-  ];
-
-  Map<DateTime, List<Entry>> _groupedEntries = {};
-  final Map<DateTime, double> _dailyTotals = {};
+  late final List<Entry> _entries;
 
   @override
   void initState() {
     super.initState();
+    _initEntries();
     _groupEntriesByDate();
   }
+
+  void addEntry(Entry entry) {
+    setState(() {
+      _entries.insert(0, entry);
+      _groupEntriesByDate();
+    });
+  }
+
+  void _initEntries() {
+    _entries = [
+      _createDummyEntry(
+        id: '1',
+        categoryName: 'Flight',
+        amount: 12500,
+        date: DateTime.now(),
+        notes: 'Tokyo Flight',
+      ),
+      _createDummyEntry(
+        id: '2',
+        categoryName: 'Accomodation',
+        amount: 8000,
+        date: DateTime.now(),
+        notes: 'Shinjuku Hotel',
+      ),
+      _createDummyEntry(
+        id: '3',
+        categoryName: 'Restaurant',
+        amount: 2500,
+        date: DateTime.now().subtract(const Duration(days: 1)),
+        notes: 'Dinner at Senso-ji',
+      ),
+      _createDummyEntry(
+        id: '4',
+        categoryName: 'Transportation',
+        amount: 1200,
+        date: DateTime.now().subtract(const Duration(days: 1)),
+        notes: 'Taxi to Airport',
+      ),
+      _createDummyEntry(
+        id: '5',
+        categoryName: 'Shopping',
+        amount: 3000,
+        date: DateTime.now().subtract(const Duration(days: 2)),
+        notes: 'Souvenirs',
+      ),
+      _createDummyEntry(
+        id: '6',
+        categoryName: 'Shopping',
+        amount: 3000,
+        date: DateTime.now().subtract(const Duration(days: 2)),
+        notes: 'Souvenirs',
+      ),
+      _createDummyEntry(
+        id: '7',
+        categoryName: 'Shopping',
+        amount: 3000,
+        date: DateTime.now().subtract(const Duration(days: 2)),
+        notes: 'Souvenirs',
+      ),
+    ];
+  }
+
+  Map<DateTime, List<Entry>> _groupedEntries = {};
+  final Map<DateTime, double> _dailyTotals = {};
 
   void _groupEntriesByDate() {
     _groupedEntries.clear();
@@ -98,8 +123,8 @@ class _EntriesScreenState extends State<EntriesScreen> {
       _groupedEntries.putIfAbsent(date, () => []).add(entry);
       _dailyTotals.update(
         date,
-        (value) => value + _parseAmount(entry.amount),
-        ifAbsent: () => _parseAmount(entry.amount),
+        (value) => value + entry.amount,
+        ifAbsent: () => entry.amount,
       );
     }
 
@@ -320,14 +345,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
                     final entryIndex = mapEntry.key;
                     final entry = mapEntry.value;
                     final isLastItem = entryIndex == entriesForDate.length - 1;
-                    return EntryItem(
-                      imagePath: entry.imagePath,
-                      name: entry.name,
-                      description: entry.description,
-                      amount: entry.amount,
-                      convertedAmount: entry.convertedAmount,
-                      isLastItem: isLastItem,
-                    );
+                    return EntryItem(entry: entry, isLastItem: isLastItem);
                   }),
                 ],
               );

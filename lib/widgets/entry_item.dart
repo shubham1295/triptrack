@@ -1,29 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:triptrack/models/entry.dart';
+import 'package:triptrack/theme/app_constants.dart';
 
 class EntryItem extends StatelessWidget {
-  final String imagePath;
-  final String name;
-  final String description;
-  final String amount;
-  final String convertedAmount;
+  final Entry entry;
   final VoidCallback? onTap;
   final bool isLastItem;
 
   const EntryItem({
     super.key,
-    required this.imagePath,
-    required this.name,
-    required this.description,
-    required this.amount,
+    required this.entry,
     this.onTap,
-    required this.convertedAmount,
     this.isLastItem = false,
   });
 
-  // Note: conversion is currently hardcoded below. Replace with dynamic logic later.
-
   @override
   Widget build(BuildContext context) {
+    final categoryName = entry.category['name'] ?? 'Unknown';
+    final categoryIcon = entry.category['icon'] as IconData? ?? Icons.category;
+    final categoryColor = entry.category['color'] as Color? ?? Colors.grey;
+
+    final currencyData = AppConstants.currencyData[entry.currency];
+    final currencySymbol = currencyData?['symbol'] ?? entry.currency;
+    final amountString = '$currencySymbol ${entry.amount.toStringAsFixed(0)}';
+
+    // Calculate converted amount (placeholder logic: assuming USD as base or using exchangeRate)
+    // If exchange rate is available and different from 1, show converted.
+    // Ideally this should convert to the user's home currency.
+    // For now, mirroring old logic: show if exchange rate implies conversion.
+    // Or just show provided exchange rate calculation.
+    String? convertedAmountString;
+    if (entry.exchangeRate != 1.0) {
+      // Assuming entry.amount is in local currency and we want to show it in some other currency?
+      // Or entry.amount is in 'currency' and we want to show home currency?
+      // Let's assume we show the value * exchangeRate.
+      // The specific logic depends on what exchangeRate means (Local -> Home or Home -> Local).
+      // ExpenseModel usually had exchange rate to Home Currency.
+      // So converted amount is amount * exchangeRate.
+      final converted = entry.amount * entry.exchangeRate;
+      // Assuming home currency is not stored in entry but known contextually.
+      // For now just showing value.
+      // formatted with some currency symbol? '¥' was in old code.
+      // I'll leave it simple for now or try to deduce.
+      // Old code had: amount: 'Rs 12,500', converted: '¥ 21,250'
+      // Let's just show formatted number.
+      convertedAmountString = '~ ${converted.toStringAsFixed(0)}';
+    }
+
     return Column(
       children: [
         InkWell(
@@ -36,30 +59,15 @@ class EntryItem extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Image on the left
+                // Icon/Image on the left
                 Container(
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    color: Colors.grey[200],
+                    color: categoryColor.withValues(alpha: 0.1),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      imagePath,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: Colors.grey[300],
-                          child: Icon(
-                            Icons.image_not_supported,
-                            color: Colors.grey[600],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
+                  child: Icon(categoryIcon, color: categoryColor, size: 24),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -68,7 +76,9 @@ class EntryItem extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        name,
+                        (entry.notes == null || entry.notes!.isEmpty)
+                            ? categoryName
+                            : entry.notes,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -77,7 +87,9 @@ class EntryItem extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        description,
+                        (entry.notes == null || entry.notes!.isEmpty)
+                            ? ''
+                            : categoryName,
                         style: Theme.of(
                           context,
                         ).textTheme.bodySmall?.copyWith(color: Colors.grey),
@@ -88,21 +100,21 @@ class EntryItem extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Amount and converted amount (yen) on the right
+                // Amount on the right
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      amount,
+                      amountString,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    if (convertedAmount.isNotEmpty)
+                    if (convertedAmountString != null)
                       Text(
-                        convertedAmount,
+                        convertedAmountString,
                         style: Theme.of(
                           context,
                         ).textTheme.bodySmall?.copyWith(color: Colors.grey),

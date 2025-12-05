@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:triptrack/screens/set_budget_screen.dart';
+import 'package:triptrack/screens/trip/set_budget_screen.dart';
+import 'package:triptrack/screens/settings/currency_list_screen.dart';
 import 'package:triptrack/theme/app_constants.dart';
-import 'package:triptrack/screens/currency_list_screen.dart';
 
 class CurrencySelectionScreen extends StatefulWidget {
   final String tripName;
