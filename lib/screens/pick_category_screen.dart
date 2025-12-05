@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:triptrack/theme/app_constants.dart';
+import 'package:triptrack/screens/add_expense_screen.dart';
 
 class PickCategoryScreen extends StatelessWidget {
-  const PickCategoryScreen({super.key});
+  final bool isSelecting;
+
+  const PickCategoryScreen({super.key, this.isSelecting = false});
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +20,7 @@ class PickCategoryScreen extends StatelessWidget {
             : colorScheme.surfaceContainer,
         iconTheme: IconThemeData(color: colorScheme.primary),
         title: Text(
-          'Pick a Category',
+          isSelecting ? 'Change Category' : 'Pick a Category',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
             color: colorScheme.primary,
@@ -110,62 +113,61 @@ class PickCategoryScreen extends StatelessWidget {
               child: GridView.builder(
                 physics: const BouncingScrollPhysics(),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  childAspectRatio: 1.0,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
+                  crossAxisCount: 4,
+                  childAspectRatio: 0.8,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 16,
                 ),
                 itemCount: AppConstants.categories.length,
                 itemBuilder: (context, index) {
                   final category = AppConstants.categories[index];
                   return InkWell(
                     onTap: () {
-                      // Handle category tap
+                      if (isSelecting) {
+                        Navigator.pop(context, category);
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                AddExpenseScreen(category: category),
+                          ),
+                        );
+                      }
                     },
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainer,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: colorScheme.outlineVariant.withValues(
-                            alpha: 0.5,
+                    borderRadius: BorderRadius.circular(20), // Changed from 16
+                    child: Column(
+                      // Changed from Container to Column directly
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(16), // Changed from 8
+                          decoration: BoxDecoration(
+                            color: (category['color'] as Color).withValues(
+                              alpha: 0.1, // Changed from 0.15
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            category['icon'] as IconData,
+                            color: category['color'] as Color,
+                            size: 24,
                           ),
                         ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: (category['color'] as Color).withValues(
-                                alpha: 0.15,
-                              ),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              category['icon'] as IconData,
-                              color: category['color'] as Color,
-                              size: 28,
-                            ),
+                        const SizedBox(height: 8),
+                        // Removed Padding widget around Text
+                        Text(
+                          category['name'] as String,
+                          textAlign: TextAlign.center,
+                          maxLines: 1, // Changed from 2
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w500, // Changed from w600
+                            color: colorScheme.onSurface,
+                            fontSize: 10, // Added fontSize
                           ),
-                          const SizedBox(height: 8),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            child: Text(
-                              category['name'] as String,
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: colorScheme.onSurface,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   );
                 },
