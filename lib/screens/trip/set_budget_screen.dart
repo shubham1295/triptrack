@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:triptrack/screens/summary_screen.dart';
+import 'package:triptrack/screens/trip/summary_screen.dart';
 import 'package:triptrack/theme/app_constants.dart';
 
 class SetBudgetScreen extends StatefulWidget {

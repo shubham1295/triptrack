@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:triptrack/theme/app_constants.dart';
-import 'package:triptrack/screens/add_expense_screen.dart';
+import 'package:triptrack/screens/entry/add_expense_screen.dart';
+import 'package:triptrack/models/entry.dart';
 
 class PickCategoryScreen extends StatelessWidget {
   final bool isSelecting;
@@ -122,17 +123,20 @@ class PickCategoryScreen extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final category = AppConstants.categories[index];
                   return InkWell(
-                    onTap: () {
+                    onTap: () async {
                       if (isSelecting) {
                         Navigator.pop(context, category);
                       } else {
-                        Navigator.push(
+                        final result = await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
                                 AddExpenseScreen(category: category),
                           ),
                         );
+                        if (result is Entry && context.mounted) {
+                          Navigator.pop(context, result);
+                        }
                       }
                     },
                     borderRadius: BorderRadius.circular(20), // Changed from 16

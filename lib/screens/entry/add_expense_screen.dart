@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import 'package:triptrack/screens/pick_category_screen.dart';
+import 'package:triptrack/screens/entry/pick_category_screen.dart';
 import 'package:triptrack/theme/app_constants.dart';
+import 'package:triptrack/models/entry.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   final Map<String, dynamic> category;
@@ -876,7 +877,27 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               width: double.infinity,
               child: FilledButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  final amountText = _amountController.text;
+                  if (amountText.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please enter an amount')),
+                    );
+                    return;
+                  }
+
+                  final newEntry = Entry(
+                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    amount: double.tryParse(amountText) ?? 0.0,
+                    currency: _selectedCurrency,
+                    exchangeRate: _exchangeRate,
+                    category: _currentCategory,
+                    date: _selectedDate,
+                    notes: _notesController.text,
+                    paymentMode: _selectedPaymentMode['name'],
+                    isExcludedFromMetrics: _excludeFromMetrics,
+                    isRefund: _isRefund,
+                  );
+                  Navigator.of(context).pop(newEntry);
                 },
                 style: FilledButton.styleFrom(
                   backgroundColor: categoryColor,

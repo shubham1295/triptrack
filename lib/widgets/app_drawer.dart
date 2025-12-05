@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:triptrack/screens/add_trip_screen.dart';
+import 'package:triptrack/screens/trip/add_trip_screen.dart';
 import 'package:triptrack/theme/app_constants.dart';
 import 'package:triptrack/theme/app_strings.dart';
 import 'package:triptrack/widgets/trip_card.dart';
