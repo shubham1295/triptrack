@@ -12,6 +12,7 @@ class Entry {
   final List<String>? photos;
   final bool isExcludedFromMetrics;
   final bool isRefund;
+  final String? groupId; // Links related multi-day entries
 
   Entry({
     required this.id,
@@ -27,5 +28,6 @@ class Entry {
     this.photos,
     this.isExcludedFromMetrics = false,
     this.isRefund = false,
+    this.groupId,
   });
 }

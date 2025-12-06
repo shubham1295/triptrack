@@ -10,8 +10,9 @@ import 'package:triptrack/models/entry.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   final Map<String, dynamic> category;
+  final Entry? entryToEdit;
 
-  const AddExpenseScreen({super.key, required this.category});
+  const AddExpenseScreen({super.key, required this.category, this.entryToEdit});
 
   @override
   State<AddExpenseScreen> createState() => _AddExpenseScreenState();
@@ -52,6 +53,59 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
     _amountFocusNode = FocusNode();
     _amountFocusNode.addListener(_handleFocusChange);
+
+    // Pre-fill fields if editing an existing entry
+    if (widget.entryToEdit != null) {
+      final entry = widget.entryToEdit!;
+
+      // Check if this was a multi-day entry
+      if (entry.endDate != null && entry.groupId != null) {
+        _spendAcrossDays = true;
+
+        // Calculate the actual start date of the group
+        // Entry IDs are in format: "groupId_index" where index is 0, 1, 2, etc.
+        DateTime startDate = entry.date;
+
+        // Try to extract the index from the entry ID
+        final idParts = entry.id.split('_');
+        if (idParts.length == 2) {
+          final index = int.tryParse(idParts[1]);
+          if (index != null) {
+            // Calculate start date by subtracting the index
+            startDate = entry.date.subtract(Duration(days: index));
+          }
+        }
+
+        _selectedDateRange = DateTimeRange(
+          start: startDate,
+          end: entry.endDate!,
+        );
+
+        // Calculate total amount from daily amount and number of days
+        final totalDays = _selectedDateRange!.duration.inDays + 1;
+        final totalAmount = entry.amount * totalDays;
+        _amountController.text = totalAmount.toString();
+      } else {
+        // Single day entry
+        _amountController.text = entry.amount.toString();
+        _selectedDate = entry.date;
+      }
+
+      _notesController.text = entry.notes ?? '';
+      _currentCategory = entry.category;
+      _selectedCurrency = entry.currency;
+
+      // Find and set the payment mode
+      final paymentMode = _paymentModes.firstWhere(
+        (mode) => mode['name'] == entry.paymentMode,
+        orElse: () => _paymentModes.first,
+      );
+      _selectedPaymentMode = paymentMode;
+
+      // Set advanced options
+      _excludeFromMetrics = entry.isExcludedFromMetrics;
+      _isRefund = entry.isRefund;
+    }
   }
 
   void _handleFocusChange() {
@@ -561,13 +615,54 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          categoryName,
+          widget.entryToEdit != null ? 'Edit Expense' : categoryName,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
             color: colorScheme.onSurface,
           ),
         ),
         centerTitle: true,
+        actions: widget.entryToEdit != null
+            ? [
+                IconButton(
+                  icon: Icon(Icons.delete_outline_rounded, color: Colors.red),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Delete Expense'),
+                        content: Text(
+                          widget.entryToEdit!.groupId != null
+                              ? 'This will delete all entries in this multi-day expense. Are you sure?'
+                              : 'Are you sure you want to delete this expense?',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(ctx); // Close dialog
+                              // Return delete action with groupId if it exists
+                              Navigator.of(context).pop({
+                                'action': 'delete',
+                                'groupId': widget.entryToEdit!.groupId,
+                                'entryId': widget.entryToEdit!.id,
+                              });
+                            },
+                            child: const Text(
+                              'Delete',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ]
+            : null,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
@@ -986,7 +1081,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     if (totalDays > 0) {
                       final double dailyAmount = calculatedAmount / totalDays;
                       final List<Entry> entries = [];
-                      final int baseId = DateTime.now().millisecondsSinceEpoch;
+                      final String groupId = DateTime.now()
+                          .millisecondsSinceEpoch
+                          .toString();
 
                       for (int i = 0; i < totalDays; i++) {
                         final date = _selectedDateRange!.start.add(
@@ -994,26 +1091,43 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         );
                         entries.add(
                           Entry(
-                            id: '${baseId}_$i',
+                            id: '${groupId}_$i',
                             amount: dailyAmount,
                             currency: _selectedCurrency,
                             exchangeRate: _exchangeRate,
                             category: _currentCategory,
                             date: date,
+                            endDate:
+                                _selectedDateRange!.end, // Store the end date
                             notes: _notesController.text,
                             paymentMode: _selectedPaymentMode['name'],
                             isExcludedFromMetrics: _excludeFromMetrics,
                             isRefund: _isRefund,
+                            groupId:
+                                groupId, // Link all entries with same groupId
                           ),
                         );
                       }
-                      Navigator.of(context).pop(entries);
+
+                      // If editing, return info to delete old entries
+                      if (widget.entryToEdit != null) {
+                        Navigator.of(context).pop({
+                          'action': 'update',
+                          'oldGroupId': widget.entryToEdit!.groupId,
+                          'oldEntryId': widget.entryToEdit!.id,
+                          'entries': entries,
+                        });
+                      } else {
+                        Navigator.of(context).pop(entries);
+                      }
                       return;
                     }
                   }
 
                   final newEntry = Entry(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
+                    id:
+                        widget.entryToEdit?.id ??
+                        DateTime.now().millisecondsSinceEpoch.toString(),
                     amount: calculatedAmount,
                     currency: _selectedCurrency,
                     exchangeRate: _exchangeRate,
@@ -1024,7 +1138,18 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     isExcludedFromMetrics: _excludeFromMetrics,
                     isRefund: _isRefund,
                   );
-                  Navigator.of(context).pop(newEntry);
+
+                  // If editing a grouped entry that's now single-day, delete old group
+                  if (widget.entryToEdit != null &&
+                      widget.entryToEdit!.groupId != null) {
+                    Navigator.of(context).pop({
+                      'action': 'update',
+                      'oldGroupId': widget.entryToEdit!.groupId,
+                      'entry': newEntry,
+                    });
+                  } else {
+                    Navigator.of(context).pop(newEntry);
+                  }
                 },
                 style: FilledButton.styleFrom(
                   backgroundColor: categoryColor,
@@ -1036,7 +1161,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   shadowColor: categoryColor.withValues(alpha: 0.4),
                 ),
                 child: Text(
-                  'Save Expense',
+                  widget.entryToEdit != null
+                      ? 'Update Expense'
+                      : 'Save Expense',
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,

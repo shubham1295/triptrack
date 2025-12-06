@@ -62,6 +62,38 @@ class EntriesScreenState extends State<EntriesScreen> {
     });
   }
 
+  void updateEntry(Entry updatedEntry) {
+    setState(() {
+      final index = _entries.indexWhere((e) => e.id == updatedEntry.id);
+      if (index != -1) {
+        // Update existing entry
+        _entries[index] = updatedEntry;
+      } else {
+        // Add new entry (happens when editing grouped entries)
+        _entries.insert(0, updatedEntry);
+      }
+      _groupEntriesByDate();
+    });
+  }
+
+  void deleteEntry(String identifier) {
+    setState(() {
+      // Check if identifier is a groupId or entryId
+      // If any entry has this as groupId, delete all with same groupId
+      final hasGroupId = _entries.any((e) => e.groupId == identifier);
+
+      if (hasGroupId) {
+        // Delete all entries with this groupId
+        _entries.removeWhere((e) => e.groupId == identifier);
+      } else {
+        // Delete single entry by ID
+        _entries.removeWhere((e) => e.id == identifier);
+      }
+
+      _groupEntriesByDate();
+    });
+  }
+
   void _initEntries() {
     _entries = [
       _createDummyEntry(
@@ -352,7 +384,12 @@ class EntriesScreenState extends State<EntriesScreen> {
                     final entryIndex = mapEntry.key;
                     final entry = mapEntry.value;
                     final isLastItem = entryIndex == entriesForDate.length - 1;
-                    return EntryItem(entry: entry, isLastItem: isLastItem);
+                    return EntryItem(
+                      entry: entry,
+                      isLastItem: isLastItem,
+                      onEntryUpdated: updateEntry,
+                      onEntryDeleted: deleteEntry,
+                    );
                   }),
                 ],
               );
