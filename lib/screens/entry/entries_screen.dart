@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/entry.dart';
-import '../../theme/app_constants.dart';
 import '../../widgets/entry_item.dart';
 import '../../widgets/summary_card.dart';
+import '../../data/temp_data.dart';
 
 class EntriesScreen extends StatefulWidget {
   static const routeName = '/entries';
@@ -14,31 +14,6 @@ class EntriesScreen extends StatefulWidget {
 }
 
 class EntriesScreenState extends State<EntriesScreen> {
-  // Helper to create dummy entry
-  Entry _createDummyEntry({
-    required String id,
-    required String categoryName,
-    required double amount,
-    required DateTime date,
-    String? notes,
-  }) {
-    final category = AppConstants.categories.firstWhere(
-      (c) => c['name'] == categoryName,
-      orElse: () => AppConstants.categories.first,
-    );
-
-    return Entry(
-      id: id,
-      amount: amount,
-      currency: 'INR',
-      exchangeRate: 1.7,
-      category: category,
-      date: date,
-      notes: notes,
-      paymentMode: 'Cash',
-    );
-  }
-
   late final List<Entry> _entries;
 
   @override
@@ -95,57 +70,8 @@ class EntriesScreenState extends State<EntriesScreen> {
   }
 
   void _initEntries() {
-    _entries = [
-      _createDummyEntry(
-        id: '1',
-        categoryName: 'Flight',
-        amount: 12500,
-        date: DateTime.now(),
-        notes: 'Tokyo Flight',
-      ),
-      _createDummyEntry(
-        id: '2',
-        categoryName: 'Accomodation',
-        amount: 8000,
-        date: DateTime.now(),
-        notes: 'Shinjuku Hotel',
-      ),
-      _createDummyEntry(
-        id: '3',
-        categoryName: 'Restaurant',
-        amount: 2500,
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        notes: 'Dinner at Senso-ji',
-      ),
-      _createDummyEntry(
-        id: '4',
-        categoryName: 'Transportation',
-        amount: 1200,
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        notes: 'Taxi to Airport',
-      ),
-      _createDummyEntry(
-        id: '5',
-        categoryName: 'Shopping',
-        amount: 3000,
-        date: DateTime.now().subtract(const Duration(days: 2)),
-        notes: 'Souvenirs',
-      ),
-      _createDummyEntry(
-        id: '6',
-        categoryName: 'Shopping',
-        amount: 3000,
-        date: DateTime.now().subtract(const Duration(days: 2)),
-        notes: 'Souvenirs',
-      ),
-      _createDummyEntry(
-        id: '7',
-        categoryName: 'Shopping',
-        amount: 3000,
-        date: DateTime.now().subtract(const Duration(days: 2)),
-        notes: 'Souvenirs',
-      ),
-    ];
+    // TODO: Replace with actual database call
+    _entries = TempData.getDummyEntries();
   }
 
   Map<DateTime, List<Entry>> _groupedEntries = {};

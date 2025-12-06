@@ -965,6 +965,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     ),
                     title: TextField(
                       controller: _notesController,
+                      textCapitalization: TextCapitalization.sentences,
                       decoration: const InputDecoration(
                         hintText: 'Add notes...',
                         border: InputBorder.none,
