@@ -117,8 +117,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     builder: (context) => const PickCategoryScreen(),
                   ),
                 );
-                if (result is Entry && _entriesScreenKey.currentState != null) {
-                  _entriesScreenKey.currentState!.addEntry(result);
+                if (result != null && _entriesScreenKey.currentState != null) {
+                  if (result is Entry) {
+                    _entriesScreenKey.currentState!.addEntry(result);
+                  } else if (result is List<Entry>) {
+                    _entriesScreenKey.currentState!.addEntries(result);
+                  }
                 }
               },
               child: const Icon(Icons.add),

@@ -22,7 +22,7 @@ class EntryItem extends StatelessWidget {
 
     final currencyData = AppConstants.currencyData[entry.currency];
     final currencySymbol = currencyData?['symbol'] ?? entry.currency;
-    final amountString = '$currencySymbol ${entry.amount.toStringAsFixed(0)}';
+    final amountString = '$currencySymbol ${entry.amount.toStringAsFixed(2)}';
 
     // Calculate converted amount (placeholder logic: assuming USD as base or using exchangeRate)
     // If exchange rate is available and different from 1, show converted.
@@ -44,7 +44,7 @@ class EntryItem extends StatelessWidget {
       // I'll leave it simple for now or try to deduce.
       // Old code had: amount: 'Rs 12,500', converted: '¥ 21,250'
       // Let's just show formatted number.
-      convertedAmountString = '~ ${converted.toStringAsFixed(0)}';
+      convertedAmountString = '~ ${converted.toStringAsFixed(2)}';
     }
 
     return Column(

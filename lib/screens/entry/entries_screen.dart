@@ -55,6 +55,13 @@ class EntriesScreenState extends State<EntriesScreen> {
     });
   }
 
+  void addEntries(List<Entry> newEntries) {
+    setState(() {
+      _entries.insertAll(0, newEntries);
+      _groupEntriesByDate();
+    });
+  }
+
   void _initEntries() {
     _entries = [
       _createDummyEntry(
@@ -332,7 +339,7 @@ class EntriesScreenState extends State<EntriesScreen> {
                           ),
                         ),
                         Text(
-                          'Rs ${totalAmount.toStringAsFixed(0)}',
+                          'Rs ${totalAmount.toStringAsFixed(2)}',
                           style: textTheme.titleMedium?.copyWith(
                             color: colorScheme.primary,
                             fontWeight: FontWeight.normal,

@@ -134,7 +134,8 @@ class PickCategoryScreen extends StatelessWidget {
                                 AddExpenseScreen(category: category),
                           ),
                         );
-                        if (result is Entry && context.mounted) {
+                        if ((result is Entry || result is List<Entry>) &&
+                            context.mounted) {
                           Navigator.pop(context, result);
                         }
                       }

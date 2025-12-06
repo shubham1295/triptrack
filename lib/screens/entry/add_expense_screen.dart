@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:function_tree/function_tree.dart';
+import 'package:triptrack/widgets/calculator_keyboard.dart';
 
 import 'package:triptrack/screens/entry/pick_category_screen.dart';
 import 'package:triptrack/theme/app_constants.dart';
@@ -21,7 +24,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   late Map<String, dynamic> _currentCategory;
 
   String _selectedCurrency = 'USD';
-  double _exchangeRate = 1.0;
+  final double _exchangeRate = 1.0;
 
   DateTime _selectedDate = DateTime.now();
   DateTimeRange? _selectedDateRange;
@@ -30,6 +33,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   bool _isAdvancedExpanded = false;
   bool _excludeFromMetrics = false;
   bool _isRefund = false;
+
+  late FocusNode _amountFocusNode;
 
   final List<Map<String, dynamic>> _paymentModes = [
     {'name': 'Cash', 'icon': Icons.attach_money},
@@ -44,14 +49,84 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     super.initState();
     _currentCategory = widget.category;
     _selectedPaymentMode = _paymentModes.first;
+
+    _amountFocusNode = FocusNode();
+    _amountFocusNode.addListener(_handleFocusChange);
+  }
+
+  void _handleFocusChange() {
+    if (_amountFocusNode.hasFocus) {
+      SystemChannels.textInput.invokeMethod('TextInput.hide');
+      _showCalculator(context);
+    }
+  }
+
+  void _showCalculator(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: false,
+      barrierColor: Colors.transparent,
+      enableDrag: false,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (BuildContext ctx) {
+        final originalColor = _currentCategory['color'] as Color;
+        final darkerColor = HSLColor.fromColor(originalColor)
+            .withLightness(
+              (HSLColor.fromColor(originalColor).lightness - 0.1).clamp(
+                0.0,
+                1.0,
+              ),
+            )
+            .toColor();
+        return CalculatorKeyboard(
+          controller: _amountController,
+          accentColor: darkerColor,
+          onDone: () {
+            Navigator.pop(ctx);
+            // Unfocus handled by whenComplete
+          },
+        );
+      },
+    ).whenComplete(() {
+      // Ensure focus is dropped when the sheet is closed by any means
+      // (Back button, tapping outside, or Done button)
+      _amountFocusNode.unfocus();
+    });
   }
 
   @override
   void dispose() {
     _amountController.dispose();
     _notesController.dispose();
+    _amountFocusNode.removeListener(_handleFocusChange);
+    _amountFocusNode.dispose();
 
     super.dispose();
+  }
+
+  double _evaluateExpression(String expression) {
+    if (expression.isEmpty) return 0.0;
+    // Handle "x" as "*"
+    String cleanExp = expression.replaceAll('x', '*');
+
+    if (double.tryParse(cleanExp) != null) {
+      return double.parse(cleanExp);
+    }
+    try {
+      if (cleanExp.endsWith('+') ||
+          cleanExp.endsWith('-') ||
+          cleanExp.endsWith('*') ||
+          cleanExp.endsWith('/') ||
+          cleanExp.endsWith('.')) {
+        cleanExp = cleanExp.substring(0, cleanExp.length - 1);
+      }
+      return cleanExp.interpret().toDouble();
+    } catch (e) {
+      return 0.0;
+    }
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -552,9 +627,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       Expanded(
                         child: TextField(
                           controller: _amountController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
+                          focusNode: _amountFocusNode,
+                          readOnly: true, // Disable system keyboard
+                          showCursor: true,
+                          // keyboardType: const TextInputType.numberWithOptions(
+                          //   decimal: true,
+                          // ), // Removed as we use custom keyboard
                           style: theme.textTheme.displaySmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onSurface,
@@ -665,7 +743,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       ),
                     ),
                     value: _spendAcrossDays,
-                    activeColor: categoryColor,
+                    activeThumbColor: categoryColor,
                     onChanged: (val) {
                       setState(() {
                         _spendAcrossDays = val;
@@ -885,9 +963,58 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     return;
                   }
 
+                  final calculatedAmount = _evaluateExpression(amountText);
+                  if (calculatedAmount <= 0.0 && amountText != '0') {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Invalid expression')),
+                    );
+                    return;
+                  }
+
+                  if (_spendAcrossDays) {
+                    if (_selectedDateRange == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please select a date range'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    final int totalDays =
+                        _selectedDateRange!.duration.inDays + 1;
+                    if (totalDays > 0) {
+                      final double dailyAmount = calculatedAmount / totalDays;
+                      final List<Entry> entries = [];
+                      final int baseId = DateTime.now().millisecondsSinceEpoch;
+
+                      for (int i = 0; i < totalDays; i++) {
+                        final date = _selectedDateRange!.start.add(
+                          Duration(days: i),
+                        );
+                        entries.add(
+                          Entry(
+                            id: '${baseId}_$i',
+                            amount: dailyAmount,
+                            currency: _selectedCurrency,
+                            exchangeRate: _exchangeRate,
+                            category: _currentCategory,
+                            date: date,
+                            notes: _notesController.text,
+                            paymentMode: _selectedPaymentMode['name'],
+                            isExcludedFromMetrics: _excludeFromMetrics,
+                            isRefund: _isRefund,
+                          ),
+                        );
+                      }
+                      Navigator.of(context).pop(entries);
+                      return;
+                    }
+                  }
+
                   final newEntry = Entry(
                     id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    amount: double.tryParse(amountText) ?? 0.0,
+                    amount: calculatedAmount,
                     currency: _selectedCurrency,
                     exchangeRate: _exchangeRate,
                     category: _currentCategory,
