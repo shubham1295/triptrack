@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:function_tree/function_tree.dart';
+import 'package:triptrack/widgets/calculator_keyboard.dart';
 
 import 'package:triptrack/screens/entry/pick_category_screen.dart';
 import 'package:triptrack/theme/app_constants.dart';
@@ -7,8 +10,9 @@ import 'package:triptrack/models/entry.dart';
 
 class AddExpenseScreen extends StatefulWidget {
   final Map<String, dynamic> category;
+  final Entry? entryToEdit;
 
-  const AddExpenseScreen({super.key, required this.category});
+  const AddExpenseScreen({super.key, required this.category, this.entryToEdit});
 
   @override
   State<AddExpenseScreen> createState() => _AddExpenseScreenState();
@@ -21,7 +25,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   late Map<String, dynamic> _currentCategory;
 
   String _selectedCurrency = 'USD';
-  double _exchangeRate = 1.0;
+  final double _exchangeRate = 1.0;
 
   DateTime _selectedDate = DateTime.now();
   DateTimeRange? _selectedDateRange;
@@ -30,6 +34,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   bool _isAdvancedExpanded = false;
   bool _excludeFromMetrics = false;
   bool _isRefund = false;
+
+  late FocusNode _amountFocusNode;
 
   final List<Map<String, dynamic>> _paymentModes = [
     {'name': 'Cash', 'icon': Icons.attach_money},
@@ -44,14 +50,137 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     super.initState();
     _currentCategory = widget.category;
     _selectedPaymentMode = _paymentModes.first;
+
+    _amountFocusNode = FocusNode();
+    _amountFocusNode.addListener(_handleFocusChange);
+
+    // Pre-fill fields if editing an existing entry
+    if (widget.entryToEdit != null) {
+      final entry = widget.entryToEdit!;
+
+      // Check if this was a multi-day entry
+      if (entry.endDate != null && entry.groupId != null) {
+        _spendAcrossDays = true;
+
+        // Calculate the actual start date of the group
+        // Entry IDs are in format: "groupId_index" where index is 0, 1, 2, etc.
+        DateTime startDate = entry.date;
+
+        // Try to extract the index from the entry ID
+        final idParts = entry.id.split('_');
+        if (idParts.length == 2) {
+          final index = int.tryParse(idParts[1]);
+          if (index != null) {
+            // Calculate start date by subtracting the index
+            startDate = entry.date.subtract(Duration(days: index));
+          }
+        }
+
+        _selectedDateRange = DateTimeRange(
+          start: startDate,
+          end: entry.endDate!,
+        );
+
+        // Calculate total amount from daily amount and number of days
+        final totalDays = _selectedDateRange!.duration.inDays + 1;
+        final totalAmount = entry.amount * totalDays;
+        _amountController.text = totalAmount.toString();
+      } else {
+        // Single day entry
+        _amountController.text = entry.amount.toString();
+        _selectedDate = entry.date;
+      }
+
+      _notesController.text = entry.notes ?? '';
+      _currentCategory = entry.category;
+      _selectedCurrency = entry.currency;
+
+      // Find and set the payment mode
+      final paymentMode = _paymentModes.firstWhere(
+        (mode) => mode['name'] == entry.paymentMode,
+        orElse: () => _paymentModes.first,
+      );
+      _selectedPaymentMode = paymentMode;
+
+      // Set advanced options
+      _excludeFromMetrics = entry.isExcludedFromMetrics;
+      _isRefund = entry.isRefund;
+    }
+  }
+
+  void _handleFocusChange() {
+    if (_amountFocusNode.hasFocus) {
+      SystemChannels.textInput.invokeMethod('TextInput.hide');
+      _showCalculator(context);
+    }
+  }
+
+  void _showCalculator(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: false,
+      barrierColor: Colors.transparent,
+      enableDrag: false,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (BuildContext ctx) {
+        final originalColor = _currentCategory['color'] as Color;
+        final darkerColor = HSLColor.fromColor(originalColor)
+            .withLightness(
+              (HSLColor.fromColor(originalColor).lightness - 0.1).clamp(
+                0.0,
+                1.0,
+              ),
+            )
+            .toColor();
+        return CalculatorKeyboard(
+          controller: _amountController,
+          accentColor: darkerColor,
+          onDone: () {
+            Navigator.pop(ctx);
+            // Unfocus handled by whenComplete
+          },
+        );
+      },
+    ).whenComplete(() {
+      // Ensure focus is dropped when the sheet is closed by any means
+      // (Back button, tapping outside, or Done button)
+      _amountFocusNode.unfocus();
+    });
   }
 
   @override
   void dispose() {
     _amountController.dispose();
     _notesController.dispose();
+    _amountFocusNode.removeListener(_handleFocusChange);
+    _amountFocusNode.dispose();
 
     super.dispose();
+  }
+
+  double _evaluateExpression(String expression) {
+    if (expression.isEmpty) return 0.0;
+    // Handle "x" as "*"
+    String cleanExp = expression.replaceAll('x', '*');
+
+    if (double.tryParse(cleanExp) != null) {
+      return double.parse(cleanExp);
+    }
+    try {
+      if (cleanExp.endsWith('+') ||
+          cleanExp.endsWith('-') ||
+          cleanExp.endsWith('*') ||
+          cleanExp.endsWith('/') ||
+          cleanExp.endsWith('.')) {
+        cleanExp = cleanExp.substring(0, cleanExp.length - 1);
+      }
+      return cleanExp.interpret().toDouble();
+    } catch (e) {
+      return 0.0;
+    }
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -468,6 +597,30 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     );
   }
 
+  void _showErrorSnackBar(String message) {
+    final theme = Theme.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.error_outline_rounded, color: theme.colorScheme.onError),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(color: theme.colorScheme.onError),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: theme.colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -486,13 +639,54 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          categoryName,
+          widget.entryToEdit != null ? 'Edit Expense' : categoryName,
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
             color: colorScheme.onSurface,
           ),
         ),
         centerTitle: true,
+        actions: widget.entryToEdit != null
+            ? [
+                IconButton(
+                  icon: Icon(Icons.delete_outline_rounded, color: Colors.red),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Delete Expense'),
+                        content: Text(
+                          widget.entryToEdit!.groupId != null
+                              ? 'This will delete all entries in this multi-day expense. Are you sure?'
+                              : 'Are you sure you want to delete this expense?',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(ctx); // Close dialog
+                              // Return delete action with groupId if it exists
+                              Navigator.of(context).pop({
+                                'action': 'delete',
+                                'groupId': widget.entryToEdit!.groupId,
+                                'entryId': widget.entryToEdit!.id,
+                              });
+                            },
+                            child: const Text(
+                              'Delete',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ]
+            : null,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
@@ -507,7 +701,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withOpacity(0.05),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -538,7 +732,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: categoryColor.withValues(alpha: 0.15),
+                            color: categoryColor.withOpacity(0.15),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -552,9 +746,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       Expanded(
                         child: TextField(
                           controller: _amountController,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
+                          focusNode: _amountFocusNode,
+                          readOnly: true, // Disable system keyboard
+                          showCursor: true,
+                          // keyboardType: const TextInputType.numberWithOptions(
+                          //   decimal: true,
+                          // ), // Removed as we use custom keyboard
                           style: theme.textTheme.displaySmall?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onSurface,
@@ -563,9 +760,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                             hintText: '0',
                             border: InputBorder.none,
                             hintStyle: TextStyle(
-                              color: colorScheme.onSurfaceVariant.withValues(
-                                alpha: 0.5,
-                              ),
+                              color: colorScheme.onSurfaceVariant
+                                  .withOpacity(0.5),
                             ),
                           ),
                         ),
@@ -587,9 +783,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         color: colorScheme.surface,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: colorScheme.outlineVariant.withValues(
-                            alpha: 0.5,
-                          ),
+                          color: colorScheme.outlineVariant.withOpacity(0.5),
                         ),
                       ),
                       child: Row(
@@ -602,8 +796,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                               shape: BoxShape.circle,
                             ),
                             child: Text(
-                              AppConstants
-                                      .currencyData[_selectedCurrency]?['symbol'] ??
+                              AppConstants.currencyData[_selectedCurrency]
+                                      ?['symbol'] ??
                                   '\$',
                               style: TextStyle(
                                 fontSize: 12,
@@ -665,7 +859,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                       ),
                     ),
                     value: _spendAcrossDays,
-                    activeColor: categoryColor,
+                    activeThumbColor: categoryColor,
                     onChanged: (val) {
                       setState(() {
                         _spendAcrossDays = val;
@@ -696,11 +890,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           Text(
                             _spendAcrossDays
                                 ? _selectedDateRange == null
-                                      ? 'Select Date Range'
-                                      : '${DateFormat('MMM dd').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.end)}'
-                                : DateFormat(
-                                    'EEEE, MMM dd, yyyy',
-                                  ).format(_selectedDate),
+                                    ? 'Select Date Range'
+                                    : '${DateFormat('MMM dd').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.end)}'
+                                : DateFormat('EEEE, MMM dd, yyyy')
+                                    .format(_selectedDate),
                             style: theme.textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.w500,
                             ),
@@ -744,7 +937,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Colors.blue.withValues(alpha: 0.1),
+                              color: Colors.blue.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
@@ -781,7 +974,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withValues(alpha: 0.1),
+                        color: Colors.orange.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -792,6 +985,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     ),
                     title: TextField(
                       controller: _notesController,
+                      textCapitalization: TextCapitalization.sentences,
                       decoration: const InputDecoration(
                         hintText: 'Add notes...',
                         border: InputBorder.none,
@@ -833,9 +1027,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
             // Advanced Options
             Theme(
-              data: Theme.of(
-                context,
-              ).copyWith(dividerColor: Colors.transparent),
+              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
                 title: Text(
                   'Advanced Options',
@@ -879,15 +1071,72 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 onPressed: () {
                   final amountText = _amountController.text;
                   if (amountText.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter an amount')),
-                    );
+                    _showErrorSnackBar('Please enter an amount');
                     return;
                   }
 
+                  final calculatedAmount = _evaluateExpression(amountText);
+                  if (calculatedAmount <= 0.0 && amountText != '0') {
+                    _showErrorSnackBar('Invalid expression or amount');
+                    return;
+                  }
+
+                  if (_spendAcrossDays) {
+                    if (_selectedDateRange == null) {
+                      _showErrorSnackBar('Please select a date range');
+                      return;
+                    }
+
+                    final int totalDays =
+                        _selectedDateRange!.duration.inDays + 1;
+                    if (totalDays > 0) {
+                      final double dailyAmount = calculatedAmount / totalDays;
+                      final List<Entry> entries = [];
+                      final String groupId =
+                          DateTime.now().millisecondsSinceEpoch.toString();
+
+                      for (int i = 0; i < totalDays; i++) {
+                        final date =
+                            _selectedDateRange!.start.add(Duration(days: i));
+                        entries.add(
+                          Entry(
+                            id: '${groupId}_$i',
+                            amount: dailyAmount,
+                            currency: _selectedCurrency,
+                            exchangeRate: _exchangeRate,
+                            category: _currentCategory,
+                            date: date,
+                            endDate:
+                                _selectedDateRange!.end, // Store the end date
+                            notes: _notesController.text,
+                            paymentMode: _selectedPaymentMode['name'],
+                            isExcludedFromMetrics: _excludeFromMetrics,
+                            isRefund: _isRefund,
+                            groupId:
+                                groupId, // Link all entries with same groupId
+                          ),
+                        );
+                      }
+
+                      // If editing, return info to delete old entries
+                      if (widget.entryToEdit != null) {
+                        Navigator.of(context).pop({
+                          'action': 'update',
+                          'oldGroupId': widget.entryToEdit!.groupId,
+                          'oldEntryId': widget.entryToEdit!.id,
+                          'entries': entries,
+                        });
+                      } else {
+                        Navigator.of(context).pop(entries);
+                      }
+                      return;
+                    }
+                  }
+
                   final newEntry = Entry(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    amount: double.tryParse(amountText) ?? 0.0,
+                    id: widget.entryToEdit?.id ??
+                        DateTime.now().millisecondsSinceEpoch.toString(),
+                    amount: calculatedAmount,
                     currency: _selectedCurrency,
                     exchangeRate: _exchangeRate,
                     category: _currentCategory,
@@ -897,7 +1146,18 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     isExcludedFromMetrics: _excludeFromMetrics,
                     isRefund: _isRefund,
                   );
-                  Navigator.of(context).pop(newEntry);
+
+                  // If editing a grouped entry that's now single-day, delete old group
+                  if (widget.entryToEdit != null &&
+                      widget.entryToEdit!.groupId != null) {
+                    Navigator.of(context).pop({
+                      'action': 'update',
+                      'oldGroupId': widget.entryToEdit!.groupId,
+      'entry': newEntry,
+                    });
+                  } else {
+                    Navigator.of(context).pop(newEntry);
+                  }
                 },
                 style: FilledButton.styleFrom(
                   backgroundColor: categoryColor,
@@ -906,10 +1166,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   elevation: 4,
-                  shadowColor: categoryColor.withValues(alpha: 0.4),
+                  shadowColor: categoryColor.withOpacity(0.4),
                 ),
                 child: Text(
-                  'Save Expense',
+                  widget.entryToEdit != null
+                      ? 'Update Expense'
+                      : 'Save Expense',
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,

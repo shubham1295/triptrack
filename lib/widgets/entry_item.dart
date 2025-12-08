@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:triptrack/models/entry.dart';
 import 'package:triptrack/theme/app_constants.dart';
+import 'package:triptrack/screens/entry/add_expense_screen.dart';
 
 class EntryItem extends StatelessWidget {
   final Entry entry;
-  final VoidCallback? onTap;
   final bool isLastItem;
+  final Function(Entry)? onEntryUpdated;
+  final Function(String)? onEntryDeleted;
 
   const EntryItem({
     super.key,
     required this.entry,
-    this.onTap,
     this.isLastItem = false,
+    this.onEntryUpdated,
+    this.onEntryDeleted,
   });
 
   @override
@@ -22,7 +25,7 @@ class EntryItem extends StatelessWidget {
 
     final currencyData = AppConstants.currencyData[entry.currency];
     final currencySymbol = currencyData?['symbol'] ?? entry.currency;
-    final amountString = '$currencySymbol ${entry.amount.toStringAsFixed(0)}';
+    final amountString = '$currencySymbol ${entry.amount.toStringAsFixed(2)}';
 
     // Calculate converted amount (placeholder logic: assuming USD as base or using exchangeRate)
     // If exchange rate is available and different from 1, show converted.
@@ -44,13 +47,67 @@ class EntryItem extends StatelessWidget {
       // I'll leave it simple for now or try to deduce.
       // Old code had: amount: 'Rs 12,500', converted: '¥ 21,250'
       // Let's just show formatted number.
-      convertedAmountString = '~ ${converted.toStringAsFixed(0)}';
+      convertedAmountString = '~ ${converted.toStringAsFixed(2)}';
     }
 
     return Column(
       children: [
         InkWell(
-          onTap: onTap,
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddExpenseScreen(
+                  category: entry.category,
+                  entryToEdit: entry,
+                ),
+              ),
+            );
+
+            // Handle the result
+            if (result is Map && result['action'] == 'delete') {
+              // Entry was deleted - check if it's a grouped entry
+              final groupId = result['groupId'] as String?;
+              if (groupId != null) {
+                // Delete all entries with this groupId
+                onEntryDeleted?.call(groupId);
+              } else {
+                // Delete single entry
+                onEntryDeleted?.call(result['entryId'] as String);
+              }
+            } else if (result is Map && result['action'] == 'update') {
+              // Entry was updated - handle grouped entry updates
+              final oldGroupId = result['oldGroupId'] as String?;
+              final oldEntryId = result['oldEntryId'] as String?;
+
+              // First delete old entries
+              if (oldGroupId != null) {
+                onEntryDeleted?.call(oldGroupId);
+              } else if (oldEntryId != null) {
+                onEntryDeleted?.call(oldEntryId);
+              }
+
+              // Then add new entries
+              if (result['entries'] != null) {
+                // Multiple entries (multi-day)
+                final entries = result['entries'] as List<Entry>;
+                for (final newEntry in entries) {
+                  onEntryUpdated?.call(newEntry);
+                }
+              } else if (result['entry'] != null) {
+                // Single entry
+                onEntryUpdated?.call(result['entry'] as Entry);
+              }
+            } else if (result is Entry) {
+              // Simple entry update (non-grouped)
+              onEntryUpdated?.call(result);
+            } else if (result is List<Entry>) {
+              // Multiple new entries (creating multi-day)
+              for (final newEntry in result) {
+                onEntryUpdated?.call(newEntry);
+              }
+            }
+          },
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 16.0,

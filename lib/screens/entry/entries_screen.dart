@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/entry.dart';
-import '../../theme/app_constants.dart';
 import '../../widgets/entry_item.dart';
 import '../../widgets/summary_card.dart';
+import '../../data/temp_data.dart';
 
 class EntriesScreen extends StatefulWidget {
   static const routeName = '/entries';
@@ -14,31 +14,6 @@ class EntriesScreen extends StatefulWidget {
 }
 
 class EntriesScreenState extends State<EntriesScreen> {
-  // Helper to create dummy entry
-  Entry _createDummyEntry({
-    required String id,
-    required String categoryName,
-    required double amount,
-    required DateTime date,
-    String? notes,
-  }) {
-    final category = AppConstants.categories.firstWhere(
-      (c) => c['name'] == categoryName,
-      orElse: () => AppConstants.categories.first,
-    );
-
-    return Entry(
-      id: id,
-      amount: amount,
-      currency: 'INR',
-      exchangeRate: 1.7,
-      category: category,
-      date: date,
-      notes: notes,
-      paymentMode: 'Cash',
-    );
-  }
-
   late final List<Entry> _entries;
 
   @override
@@ -55,58 +30,48 @@ class EntriesScreenState extends State<EntriesScreen> {
     });
   }
 
+  void addEntries(List<Entry> newEntries) {
+    setState(() {
+      _entries.insertAll(0, newEntries);
+      _groupEntriesByDate();
+    });
+  }
+
+  void updateEntry(Entry updatedEntry) {
+    setState(() {
+      final index = _entries.indexWhere((e) => e.id == updatedEntry.id);
+      if (index != -1) {
+        // Update existing entry
+        _entries[index] = updatedEntry;
+      } else {
+        // Add new entry (happens when editing grouped entries)
+        _entries.insert(0, updatedEntry);
+      }
+      _groupEntriesByDate();
+    });
+  }
+
+  void deleteEntry(String identifier) {
+    setState(() {
+      // Check if identifier is a groupId or entryId
+      // If any entry has this as groupId, delete all with same groupId
+      final hasGroupId = _entries.any((e) => e.groupId == identifier);
+
+      if (hasGroupId) {
+        // Delete all entries with this groupId
+        _entries.removeWhere((e) => e.groupId == identifier);
+      } else {
+        // Delete single entry by ID
+        _entries.removeWhere((e) => e.id == identifier);
+      }
+
+      _groupEntriesByDate();
+    });
+  }
+
   void _initEntries() {
-    _entries = [
-      _createDummyEntry(
-        id: '1',
-        categoryName: 'Flight',
-        amount: 12500,
-        date: DateTime.now(),
-        notes: 'Tokyo Flight',
-      ),
-      _createDummyEntry(
-        id: '2',
-        categoryName: 'Accomodation',
-        amount: 8000,
-        date: DateTime.now(),
-        notes: 'Shinjuku Hotel',
-      ),
-      _createDummyEntry(
-        id: '3',
-        categoryName: 'Restaurant',
-        amount: 2500,
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        notes: 'Dinner at Senso-ji',
-      ),
-      _createDummyEntry(
-        id: '4',
-        categoryName: 'Transportation',
-        amount: 1200,
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        notes: 'Taxi to Airport',
-      ),
-      _createDummyEntry(
-        id: '5',
-        categoryName: 'Shopping',
-        amount: 3000,
-        date: DateTime.now().subtract(const Duration(days: 2)),
-        notes: 'Souvenirs',
-      ),
-      _createDummyEntry(
-        id: '6',
-        categoryName: 'Shopping',
-        amount: 3000,
-        date: DateTime.now().subtract(const Duration(days: 2)),
-        notes: 'Souvenirs',
-      ),
-      _createDummyEntry(
-        id: '7',
-        categoryName: 'Shopping',
-        amount: 3000,
-        date: DateTime.now().subtract(const Duration(days: 2)),
-        notes: 'Souvenirs',
-      ),
-    ];
+    // TODO: Replace with actual database call
+    _entries = TempData.getDummyEntries();
   }
 
   Map<DateTime, List<Entry>> _groupedEntries = {};
@@ -332,7 +297,7 @@ class EntriesScreenState extends State<EntriesScreen> {
                           ),
                         ),
                         Text(
-                          'Rs ${totalAmount.toStringAsFixed(0)}',
+                          'Rs ${totalAmount.toStringAsFixed(2)}',
                           style: textTheme.titleMedium?.copyWith(
                             color: colorScheme.primary,
                             fontWeight: FontWeight.normal,
@@ -345,7 +310,12 @@ class EntriesScreenState extends State<EntriesScreen> {
                     final entryIndex = mapEntry.key;
                     final entry = mapEntry.value;
                     final isLastItem = entryIndex == entriesForDate.length - 1;
-                    return EntryItem(entry: entry, isLastItem: isLastItem);
+                    return EntryItem(
+                      entry: entry,
+                      isLastItem: isLastItem,
+                      onEntryUpdated: updateEntry,
+                      onEntryDeleted: deleteEntry,
+                    );
                   }),
                 ],
               );
