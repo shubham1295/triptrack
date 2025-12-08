@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:triptrack/theme/app_strings.dart';
 import 'package:triptrack/models/trip.dart';
 import 'package:triptrack/screens/trip/edit_trip_screen.dart';
+import 'package:triptrack/data/temp_data.dart';
 
 class TripCard extends StatelessWidget {
   final String imageUrl;
@@ -10,6 +11,7 @@ class TripCard extends StatelessWidget {
   final String budget;
   final bool isInDrawer;
   final Trip? trip;
+  final VoidCallback? onDataChanged;
 
   const TripCard({
     super.key,
@@ -19,6 +21,7 @@ class TripCard extends StatelessWidget {
     required this.budget,
     this.isInDrawer = false,
     this.trip,
+    this.onDataChanged,
   });
 
   @override
@@ -93,16 +96,59 @@ class TripCard extends StatelessWidget {
                         ),
                         elevation: 2,
                         offset: const Offset(0, 30),
-                        onSelected: (String result) {
+                        onSelected: (String result) async {
                           if (result == AppStrings.edit && trip != null) {
-                            Navigator.push(
+                            final result = await Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
                                     EditTripScreen(trip: trip!),
                               ),
                             );
-                          } else if (result == AppStrings.delete) {
+
+                            // Handle the result from EditTripScreen
+                            if (result != null) {
+                              if (result == 'deleted') {
+                                // Trip was deleted in EditTripScreen
+                                TempData.deleteTrip(trip!.id);
+                                onDataChanged?.call();
+
+                                // Close drawer and show snackbar on main screen
+                                if (context.mounted) {
+                                  Navigator.of(context).pop(); // Close drawer
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Text(
+                                        'Trip deleted successfully',
+                                      ),
+                                      backgroundColor: theme.colorScheme.error,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              } else if (result is Trip) {
+                                // Trip was updated
+                                TempData.updateTrip(result.id, result);
+                                onDataChanged?.call();
+
+                                // Close drawer and show snackbar on main screen
+                                if (context.mounted) {
+                                  Navigator.of(context).pop(); // Close drawer
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Text(
+                                        'Trip updated successfully',
+                                      ),
+                                      backgroundColor:
+                                          theme.colorScheme.primary,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+                          } else if (result == AppStrings.delete &&
+                              trip != null) {
                             // Show delete confirmation dialog
                             showDialog(
                               context: context,
@@ -118,17 +164,29 @@ class TripCard extends StatelessWidget {
                                   ),
                                   TextButton(
                                     onPressed: () {
-                                      // TODO: Delete trip from database/storage
-                                      Navigator.pop(context);
-                                      ScaffoldMessenger.of(context);
-                                      // .showSnackBar(
-                                      //   SnackBar(
-                                      //     content: const Text('Trip deleted'),
-                                      //     backgroundColor:
-                                      //         theme.colorScheme.error,
-                                      //     behavior: SnackBarBehavior.floating,
-                                      //   ),
-                                      // );
+                                      // Delete trip from TempData
+                                      TempData.deleteTrip(trip!.id);
+                                      Navigator.pop(context); // Close dialog
+                                      onDataChanged?.call();
+
+                                      // Close drawer and show snackbar on main screen
+                                      if (context.mounted) {
+                                        Navigator.of(
+                                          context,
+                                        ).pop(); // Close drawer
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: const Text(
+                                              'Trip deleted successfully',
+                                            ),
+                                            backgroundColor:
+                                                theme.colorScheme.error,
+                                            behavior: SnackBarBehavior.floating,
+                                          ),
+                                        );
+                                      }
                                     },
                                     style: TextButton.styleFrom(
                                       foregroundColor: theme.colorScheme.error,

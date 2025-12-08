@@ -152,14 +152,6 @@ class _EditTripScreenState extends State<EditTripScreen> {
       dailyBudget: dailyBudget,
     );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Trip updated successfully'),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-
     Navigator.pop(context, updatedTrip);
   }
 
