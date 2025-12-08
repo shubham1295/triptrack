@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:triptrack/theme/app_strings.dart';
+import 'package:triptrack/models/trip.dart';
+import 'package:triptrack/screens/trip/edit_trip_screen.dart';
+import 'package:triptrack/data/temp_data.dart';
 
 class TripCard extends StatelessWidget {
   final String imageUrl;
@@ -7,6 +10,8 @@ class TripCard extends StatelessWidget {
   final String date;
   final String budget;
   final bool isInDrawer;
+  final Trip? trip;
+  final VoidCallback? onDataChanged;
 
   const TripCard({
     super.key,
@@ -15,6 +20,8 @@ class TripCard extends StatelessWidget {
     required this.date,
     required this.budget,
     this.isInDrawer = false,
+    this.trip,
+    this.onDataChanged,
   });
 
   @override
@@ -84,18 +91,154 @@ class TripCard extends StatelessWidget {
                           Icons.more_vert,
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
-                        onSelected: (String result) {
-                          // Handle selection
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                        offset: const Offset(0, 30),
+                        onSelected: (String result) async {
+                          if (result == AppStrings.edit && trip != null) {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    EditTripScreen(trip: trip!),
+                              ),
+                            );
+
+                            // Handle the result from EditTripScreen
+                            if (result != null) {
+                              if (result == 'deleted') {
+                                // Trip was deleted in EditTripScreen
+                                TempData.deleteTrip(trip!.id);
+                                onDataChanged?.call();
+
+                                // Close drawer and show snackbar on main screen
+                                if (context.mounted) {
+                                  Navigator.of(context).pop(); // Close drawer
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Text(
+                                        'Trip deleted successfully',
+                                      ),
+                                      backgroundColor: theme.colorScheme.error,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              } else if (result is Trip) {
+                                // Trip was updated
+                                TempData.updateTrip(result.id, result);
+                                onDataChanged?.call();
+
+                                // Close drawer and show snackbar on main screen
+                                if (context.mounted) {
+                                  Navigator.of(context).pop(); // Close drawer
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Text(
+                                        'Trip updated successfully',
+                                      ),
+                                      backgroundColor:
+                                          theme.colorScheme.primary,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+                          } else if (result == AppStrings.delete &&
+                              trip != null) {
+                            // Show delete confirmation dialog
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Delete Trip'),
+                                content: const Text(
+                                  'Are you sure you want to delete this trip? This action cannot be undone.',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      // Delete trip from TempData
+                                      TempData.deleteTrip(trip!.id);
+                                      Navigator.pop(context); // Close dialog
+                                      onDataChanged?.call();
+
+                                      // Close drawer and show snackbar on main screen
+                                      if (context.mounted) {
+                                        Navigator.of(
+                                          context,
+                                        ).pop(); // Close drawer
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: const Text(
+                                              'Trip deleted successfully',
+                                            ),
+                                            backgroundColor:
+                                                theme.colorScheme.error,
+                                            behavior: SnackBarBehavior.floating,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: theme.colorScheme.error,
+                                    ),
+                                    child: const Text('Delete'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
                         },
                         itemBuilder: (BuildContext context) =>
                             <PopupMenuEntry<String>>[
-                              const PopupMenuItem<String>(
+                              PopupMenuItem<String>(
                                 value: AppStrings.edit,
-                                child: Text(AppStrings.editTrip),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.edit_outlined,
+                                      size: 20,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      AppStrings.editTrip,
+                                      style: TextStyle(
+                                        color: theme.colorScheme.onSurface,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              const PopupMenuItem<String>(
+                              PopupMenuItem<String>(
                                 value: AppStrings.delete,
-                                child: Text(AppStrings.deleteTrip),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.delete_outline,
+                                      size: 20,
+                                      color: theme.colorScheme.error,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      AppStrings.deleteTrip,
+                                      style: TextStyle(
+                                        color: theme.colorScheme.error,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                       ),
