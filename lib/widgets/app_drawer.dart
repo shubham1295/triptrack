@@ -3,9 +3,44 @@ import 'package:triptrack/screens/trip/add_trip_screen.dart';
 import 'package:triptrack/theme/app_constants.dart';
 import 'package:triptrack/theme/app_strings.dart';
 import 'package:triptrack/widgets/trip_card.dart';
+import 'package:triptrack/models/trip.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
+
+  // Sample trip data - Replace with actual data from database/state management
+  static final Trip _activeTrip = Trip(
+    id: '1',
+    name: 'Japan',
+    imagePath: 'assets/images/world-icon.jpg',
+    homeCurrency: 'INR',
+    startDate: DateTime(2025, 11, 10),
+    endDate: DateTime(2025, 11, 20),
+    totalBudget: 200000,
+    dailyBudget: 1200,
+  );
+
+  static final Trip _europeTrip = Trip(
+    id: '2',
+    name: 'EuropeEuropeEuropeEuropeEuropeEuropeEuropeEurope',
+    imagePath: 'assets/images/world-icon.jpg',
+    homeCurrency: 'INR',
+    startDate: DateTime(2026, 1, 1),
+    endDate: DateTime(2026, 1, 15),
+    totalBudget: 350000,
+    dailyBudget: 2000,
+  );
+
+  static final Trip _usaTrip = Trip(
+    id: '3',
+    name: 'USA',
+    imagePath: 'assets/images/world-icon.jpg',
+    homeCurrency: 'INR',
+    startDate: DateTime(2026, 3, 1),
+    endDate: DateTime(2026, 3, 10),
+    totalBudget: 250000,
+    dailyBudget: 1500,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -125,12 +160,13 @@ class AppDrawer extends StatelessWidget {
                               ],
                             ),
                           ),
-                          const TripCard(
+                          TripCard(
                             imageUrl: 'assets/images/world-icon.jpg',
                             title: 'Japan',
                             date: '10/Nov/2025 - 20/Nov/2025',
                             budget: 'Rs.1200 / Rs. 2,00,000',
                             isInDrawer: true,
+                            trip: _activeTrip,
                           ),
                         ],
                       ),
@@ -168,19 +204,21 @@ class AppDrawer extends StatelessWidget {
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(16.0),
-              children: const [
+              children: [
                 TripCard(
                   imageUrl: 'assets/images/world-icon.jpg',
                   title: 'EuropeEuropeEuropeEuropeEuropeEuropeEuropeEurope',
                   date: '01/Jan/2026 - 15/Jan/2026',
                   budget: 'Rs. 2000 / Rs. 3,50,000',
+                  trip: _europeTrip,
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 TripCard(
                   imageUrl: 'assets/images/world-icon.jpg',
                   title: 'USA',
                   date: '01/Mar/2026 - 10/Mar/2026',
                   budget: 'Rs. 1500 / Rs. 2,50,000',
+                  trip: _usaTrip,
                 ),
               ],
             ),

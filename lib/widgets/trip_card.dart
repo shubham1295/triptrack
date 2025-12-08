@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:triptrack/theme/app_strings.dart';
+import 'package:triptrack/models/trip.dart';
+import 'package:triptrack/screens/trip/edit_trip_screen.dart';
 
 class TripCard extends StatelessWidget {
   final String imageUrl;
@@ -7,6 +9,7 @@ class TripCard extends StatelessWidget {
   final String date;
   final String budget;
   final bool isInDrawer;
+  final Trip? trip;
 
   const TripCard({
     super.key,
@@ -15,6 +18,7 @@ class TripCard extends StatelessWidget {
     required this.date,
     required this.budget,
     this.isInDrawer = false,
+    this.trip,
   });
 
   @override
@@ -84,18 +88,99 @@ class TripCard extends StatelessWidget {
                           Icons.more_vert,
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                        offset: const Offset(0, 30),
                         onSelected: (String result) {
-                          // Handle selection
+                          if (result == AppStrings.edit && trip != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    EditTripScreen(trip: trip!),
+                              ),
+                            );
+                          } else if (result == AppStrings.delete) {
+                            // Show delete confirmation dialog
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Delete Trip'),
+                                content: const Text(
+                                  'Are you sure you want to delete this trip? This action cannot be undone.',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      // TODO: Delete trip from database/storage
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(context);
+                                      // .showSnackBar(
+                                      //   SnackBar(
+                                      //     content: const Text('Trip deleted'),
+                                      //     backgroundColor:
+                                      //         theme.colorScheme.error,
+                                      //     behavior: SnackBarBehavior.floating,
+                                      //   ),
+                                      // );
+                                    },
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: theme.colorScheme.error,
+                                    ),
+                                    child: const Text('Delete'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
                         },
                         itemBuilder: (BuildContext context) =>
                             <PopupMenuEntry<String>>[
-                              const PopupMenuItem<String>(
+                              PopupMenuItem<String>(
                                 value: AppStrings.edit,
-                                child: Text(AppStrings.editTrip),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.edit_outlined,
+                                      size: 20,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      AppStrings.editTrip,
+                                      style: TextStyle(
+                                        color: theme.colorScheme.onSurface,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                              const PopupMenuItem<String>(
+                              PopupMenuItem<String>(
                                 value: AppStrings.delete,
-                                child: Text(AppStrings.deleteTrip),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.delete_outline,
+                                      size: 20,
+                                      color: theme.colorScheme.error,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      AppStrings.deleteTrip,
+                                      style: TextStyle(
+                                        color: theme.colorScheme.error,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
                       ),
