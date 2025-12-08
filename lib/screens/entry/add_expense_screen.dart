@@ -597,6 +597,30 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     );
   }
 
+  void _showErrorSnackBar(String message) {
+    final theme = Theme.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.error_outline_rounded, color: theme.colorScheme.onError),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: TextStyle(color: theme.colorScheme.onError),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: theme.colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -677,7 +701,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
+                    color: Colors.black.withOpacity(0.05),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -708,7 +732,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: categoryColor.withValues(alpha: 0.15),
+                            color: categoryColor.withOpacity(0.15),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -736,9 +760,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                             hintText: '0',
                             border: InputBorder.none,
                             hintStyle: TextStyle(
-                              color: colorScheme.onSurfaceVariant.withValues(
-                                alpha: 0.5,
-                              ),
+                              color: colorScheme.onSurfaceVariant
+                                  .withOpacity(0.5),
                             ),
                           ),
                         ),
@@ -760,9 +783,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         color: colorScheme.surface,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: colorScheme.outlineVariant.withValues(
-                            alpha: 0.5,
-                          ),
+                          color: colorScheme.outlineVariant.withOpacity(0.5),
                         ),
                       ),
                       child: Row(
@@ -775,8 +796,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                               shape: BoxShape.circle,
                             ),
                             child: Text(
-                              AppConstants
-                                      .currencyData[_selectedCurrency]?['symbol'] ??
+                              AppConstants.currencyData[_selectedCurrency]
+                                      ?['symbol'] ??
                                   '\$',
                               style: TextStyle(
                                 fontSize: 12,
@@ -869,11 +890,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           Text(
                             _spendAcrossDays
                                 ? _selectedDateRange == null
-                                      ? 'Select Date Range'
-                                      : '${DateFormat('MMM dd').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.end)}'
-                                : DateFormat(
-                                    'EEEE, MMM dd, yyyy',
-                                  ).format(_selectedDate),
+                                    ? 'Select Date Range'
+                                    : '${DateFormat('MMM dd').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.end)}'
+                                : DateFormat('EEEE, MMM dd, yyyy')
+                                    .format(_selectedDate),
                             style: theme.textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.w500,
                             ),
@@ -917,7 +937,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Colors.blue.withValues(alpha: 0.1),
+                              color: Colors.blue.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
@@ -954,7 +974,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withValues(alpha: 0.1),
+                        color: Colors.orange.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -1007,9 +1027,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
             // Advanced Options
             Theme(
-              data: Theme.of(
-                context,
-              ).copyWith(dividerColor: Colors.transparent),
+              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
                 title: Text(
                   'Advanced Options',
@@ -1053,27 +1071,19 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 onPressed: () {
                   final amountText = _amountController.text;
                   if (amountText.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter an amount')),
-                    );
+                    _showErrorSnackBar('Please enter an amount');
                     return;
                   }
 
                   final calculatedAmount = _evaluateExpression(amountText);
                   if (calculatedAmount <= 0.0 && amountText != '0') {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Invalid expression')),
-                    );
+                    _showErrorSnackBar('Invalid expression or amount');
                     return;
                   }
 
                   if (_spendAcrossDays) {
                     if (_selectedDateRange == null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Please select a date range'),
-                        ),
-                      );
+                      _showErrorSnackBar('Please select a date range');
                       return;
                     }
 
@@ -1082,14 +1092,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     if (totalDays > 0) {
                       final double dailyAmount = calculatedAmount / totalDays;
                       final List<Entry> entries = [];
-                      final String groupId = DateTime.now()
-                          .millisecondsSinceEpoch
-                          .toString();
+                      final String groupId =
+                          DateTime.now().millisecondsSinceEpoch.toString();
 
                       for (int i = 0; i < totalDays; i++) {
-                        final date = _selectedDateRange!.start.add(
-                          Duration(days: i),
-                        );
+                        final date =
+                            _selectedDateRange!.start.add(Duration(days: i));
                         entries.add(
                           Entry(
                             id: '${groupId}_$i',
@@ -1126,8 +1134,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   }
 
                   final newEntry = Entry(
-                    id:
-                        widget.entryToEdit?.id ??
+                    id: widget.entryToEdit?.id ??
                         DateTime.now().millisecondsSinceEpoch.toString(),
                     amount: calculatedAmount,
                     currency: _selectedCurrency,
@@ -1146,7 +1153,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     Navigator.of(context).pop({
                       'action': 'update',
                       'oldGroupId': widget.entryToEdit!.groupId,
-                      'entry': newEntry,
+      'entry': newEntry,
                     });
                   } else {
                     Navigator.of(context).pop(newEntry);
@@ -1159,7 +1166,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   elevation: 4,
-                  shadowColor: categoryColor.withValues(alpha: 0.4),
+                  shadowColor: categoryColor.withOpacity(0.4),
                 ),
                 child: Text(
                   widget.entryToEdit != null
