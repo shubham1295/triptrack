@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:triptrack/screens/travel_dates_screen.dart';
+import 'package:triptrack/screens/trip/travel_dates_screen.dart';
 
 class AddTripScreen extends StatefulWidget {
   static const String routeName = '/add-trip';

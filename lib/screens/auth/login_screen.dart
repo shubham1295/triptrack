@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../widgets/elevated_button.dart';
-import '../widgets/hill_background.dart';
-import 'home_screen.dart';
+import 'package:triptrack/widgets/elevated_button.dart';
+import 'package:triptrack/widgets/hill_background.dart';
+import 'package:triptrack/screens/home/home_screen.dart';
 
 /// Button width constant for Google and Email buttons
 const double _kButtonWidth = 280.0;

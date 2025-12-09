@@ -1,16 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:triptrack/screens/add_trip_screen.dart';
+import 'package:triptrack/screens/trip/add_trip_screen.dart';
 import 'package:triptrack/theme/app_constants.dart';
 import 'package:triptrack/theme/app_strings.dart';
 import 'package:triptrack/widgets/trip_card.dart';
+import 'package:triptrack/data/temp_data.dart';
 
-class AppDrawer extends StatelessWidget {
+class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
 
+  @override
+  State<AppDrawer> createState() => _AppDrawerState();
+}
+
+class _AppDrawerState extends State<AppDrawer> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+
+    // Get trip data from centralized source
+    final activeTrip = TempData.getActiveTrip();
+    final previousTrips = TempData.getPreviousTrips();
 
     return Drawer(
       width: MediaQuery.of(context).size.width * AppConstants.drawerWidthFactor,
@@ -65,76 +75,94 @@ class AppDrawer extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
                     // Active Trip Card with Badge
-                    Container(
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? theme.colorScheme.surface.withValues(alpha: 0.3)
-                            : Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
+                    if (activeTrip != null)
+                      Container(
+                        decoration: BoxDecoration(
                           color: isDark
-                              ? theme.colorScheme.primary.withValues(alpha: 0.3)
-                              : Colors.white.withValues(alpha: 0.3),
-                          width: 1.5,
+                              ? theme.colorScheme.surface.withValues(alpha: 0.3)
+                              : Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isDark
+                                ? theme.colorScheme.primary.withValues(
+                                    alpha: 0.3,
+                                  )
+                                : Colors.white.withValues(alpha: 0.3),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 5,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.secondary,
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: theme.colorScheme.secondary
+                                              .withValues(alpha: 0.3),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.circle,
+                                          size: 10,
+                                          color: theme.colorScheme.onSecondary,
+                                        ),
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          'Active',
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                                color: theme
+                                                    .colorScheme
+                                                    .onSecondary,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            TripCard(
+                              imageUrl:
+                                  activeTrip.imagePath ??
+                                  'assets/images/world-icon.jpg',
+                              title: activeTrip.name,
+                              date: _formatDateRange(
+                                activeTrip.startDate,
+                                activeTrip.endDate,
+                              ),
+                              budget: _formatBudget(
+                                activeTrip.dailyBudget,
+                                activeTrip.totalBudget,
+                              ),
+                              isInDrawer: true,
+                              trip: activeTrip,
+                              onDataChanged: () {
+                                setState(() {
+                                  // Refresh the drawer when data changes
+                                });
+                              },
+                            ),
+                          ],
                         ),
                       ),
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.secondary,
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: theme.colorScheme.secondary
-                                            .withValues(alpha: 0.3),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.circle,
-                                        size: 10,
-                                        color: theme.colorScheme.onSecondary,
-                                      ),
-                                      const SizedBox(width: 5),
-                                      Text(
-                                        'Active',
-                                        style: theme.textTheme.labelSmall
-                                            ?.copyWith(
-                                              color:
-                                                  theme.colorScheme.onSecondary,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const TripCard(
-                            imageUrl: 'assets/images/world-icon.jpg',
-                            title: 'Japan',
-                            date: '10/Nov/2025 - 20/Nov/2025',
-                            budget: 'Rs.1200 / Rs. 2,00,000',
-                            isInDrawer: true,
-                          ),
-                        ],
-                      ),
-                    ),
                     const SizedBox(height: 16),
                   ],
                 ),
@@ -166,28 +194,91 @@ class AppDrawer extends StatelessWidget {
 
           // Previous Trips List
           Expanded(
-            child: ListView(
+            child: ListView.separated(
               padding: const EdgeInsets.all(16.0),
-              children: const [
-                TripCard(
-                  imageUrl: 'assets/images/world-icon.jpg',
-                  title: 'EuropeEuropeEuropeEuropeEuropeEuropeEuropeEurope',
-                  date: '01/Jan/2026 - 15/Jan/2026',
-                  budget: 'Rs. 2000 / Rs. 3,50,000',
-                ),
-                SizedBox(height: 12),
-                TripCard(
-                  imageUrl: 'assets/images/world-icon.jpg',
-                  title: 'USA',
-                  date: '01/Mar/2026 - 10/Mar/2026',
-                  budget: 'Rs. 1500 / Rs. 2,50,000',
-                ),
-              ],
+              itemCount: previousTrips.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final trip = previousTrips[index];
+                return TripCard(
+                  imageUrl: trip.imagePath ?? 'assets/images/world-icon.jpg',
+                  title: trip.name,
+                  date: _formatDateRange(trip.startDate, trip.endDate),
+                  budget: _formatBudget(trip.dailyBudget, trip.totalBudget),
+                  trip: trip,
+                  onDataChanged: () {
+                    setState(() {
+                      // Refresh the drawer when data changes
+                    });
+                  },
+                );
+              },
             ),
           ),
         ],
       ),
     );
+  }
+
+  /// Formats the date range for display
+  String _formatDateRange(DateTime? startDate, DateTime? endDate) {
+    if (startDate == null || endDate == null) {
+      return 'No dates set';
+    }
+    final start =
+        '${startDate.day.toString().padLeft(2, '0')}/${_getMonthName(startDate.month)}/${startDate.year}';
+    final end =
+        '${endDate.day.toString().padLeft(2, '0')}/${_getMonthName(endDate.month)}/${endDate.year}';
+    return '$start - $end';
+  }
+
+  /// Formats the budget for display
+  String _formatBudget(double dailyBudget, double totalBudget) {
+    return 'Rs. ${dailyBudget.toStringAsFixed(0)} / Rs. ${_formatNumber(totalBudget)}';
+  }
+
+  /// Formats a number with commas
+  String _formatNumber(double number) {
+    final str = number.toStringAsFixed(0);
+    final parts = <String>[];
+    var remaining = str;
+
+    if (remaining.length > 3) {
+      parts.insert(0, remaining.substring(remaining.length - 3));
+      remaining = remaining.substring(0, remaining.length - 3);
+
+      while (remaining.length > 2) {
+        parts.insert(0, remaining.substring(remaining.length - 2));
+        remaining = remaining.substring(0, remaining.length - 2);
+      }
+
+      if (remaining.isNotEmpty) {
+        parts.insert(0, remaining);
+      }
+    } else {
+      return str;
+    }
+
+    return parts.join(',');
+  }
+
+  /// Gets the month name abbreviation
+  String _getMonthName(int month) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return months[month - 1];
   }
 }
 

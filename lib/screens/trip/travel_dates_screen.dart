@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:triptrack/screens/currency_selection_screen.dart';
+import 'currency_selection_screen.dart';
 
 class TravelDatesScreen extends StatefulWidget {
+  static const routeName = '/travel-dates';
   final String tripName;
   final String? imagePath;
 

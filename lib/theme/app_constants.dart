@@ -46,7 +46,7 @@ class AppConstants {
     },
     {
       'name': 'Activities',
-      'icon': Icons.local_activity,
+      'icon': Icons.downhill_skiing,
       'color': Colors.pink.shade400,
     },
     {'name': 'Drinks', 'icon': Icons.local_bar, 'color': Colors.amber.shade400},

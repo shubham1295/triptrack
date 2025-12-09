@@ -1,91 +1,81 @@
 import 'package:flutter/material.dart';
-import 'package:triptrack/models/entry.dart';
-import 'package:triptrack/widgets/entry_item.dart';
-import 'package:triptrack/widgets/summary_card.dart';
 import 'package:intl/intl.dart';
+import '../../models/entry.dart';
+import '../../widgets/entry_item.dart';
+import '../../widgets/summary_card.dart';
+import '../../data/temp_data.dart';
 
 class EntriesScreen extends StatefulWidget {
+  static const routeName = '/entries';
   const EntriesScreen({super.key});
 
   @override
-  State<EntriesScreen> createState() => _EntriesScreenState();
+  State<EntriesScreen> createState() => EntriesScreenState();
 }
 
-class _EntriesScreenState extends State<EntriesScreen> {
-  double _parseAmount(String amountString) {
-    final cleanedAmount = amountString
-        .replaceAll('Rs ', '')
-        .replaceAll(',', '');
-    return double.tryParse(cleanedAmount) ?? 0.0;
-  }
-
-  final List<Entry> _entries = [
-    Entry(
-      imagePath: 'assets/images/google_logo.png',
-      name: 'Flight Ticket',
-      description: 'Tokyo Flight',
-      amount: 'Rs 12,500',
-      convertedAmount: '¥ 21,250',
-      date: DateTime.now(),
-    ),
-    Entry(
-      imagePath: 'assets/images/google_logo.png',
-      name: 'Hotel Booking',
-      description: 'Shinjuku Hotel',
-      amount: 'Rs 8,000',
-      convertedAmount: '¥ 13,600',
-      date: DateTime.now(),
-    ),
-    Entry(
-      imagePath: 'assets/images/google_logo.png',
-      name: 'Restaurant',
-      description: 'Dinner at Senso-ji',
-      amount: 'Rs 2,500',
-      convertedAmount: '¥ 4,250',
-      date: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-    Entry(
-      imagePath: 'assets/images/google_logo.png',
-      name: 'Transport',
-      description: 'Taxi to Airport',
-      amount: 'Rs 1,200',
-      convertedAmount: '¥ 2,040',
-      date: DateTime.now().subtract(const Duration(days: 1)),
-    ),
-    Entry(
-      imagePath: 'assets/images/google_logo.png',
-      name: 'Shopping',
-      description: 'Souvenirs',
-      amount: 'Rs 3,000',
-      convertedAmount: '¥ 5,100',
-      date: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-    Entry(
-      imagePath: 'assets/images/google_logo.png',
-      name: 'Shopping',
-      description: 'Souvenirs',
-      amount: 'Rs 3,000',
-      convertedAmount: '¥ 5,100',
-      date: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-    Entry(
-      imagePath: 'assets/images/google_logo.png',
-      name: 'Shopping',
-      description: 'Souvenirs',
-      amount: 'Rs 3,000',
-      convertedAmount: '¥ 5,100',
-      date: DateTime.now().subtract(const Duration(days: 2)),
-    ),
-  ];
-
-  Map<DateTime, List<Entry>> _groupedEntries = {};
-  final Map<DateTime, double> _dailyTotals = {};
+class EntriesScreenState extends State<EntriesScreen> {
+  late final List<Entry> _entries;
 
   @override
   void initState() {
     super.initState();
+    _initEntries();
     _groupEntriesByDate();
   }
+
+  void addEntry(Entry entry) {
+    setState(() {
+      _entries.insert(0, entry);
+      _groupEntriesByDate();
+    });
+  }
+
+  void addEntries(List<Entry> newEntries) {
+    setState(() {
+      _entries.insertAll(0, newEntries);
+      _groupEntriesByDate();
+    });
+  }
+
+  void updateEntry(Entry updatedEntry) {
+    setState(() {
+      final index = _entries.indexWhere((e) => e.id == updatedEntry.id);
+      if (index != -1) {
+        // Update existing entry
+        _entries[index] = updatedEntry;
+      } else {
+        // Add new entry (happens when editing grouped entries)
+        _entries.insert(0, updatedEntry);
+      }
+      _groupEntriesByDate();
+    });
+  }
+
+  void deleteEntry(String identifier) {
+    setState(() {
+      // Check if identifier is a groupId or entryId
+      // If any entry has this as groupId, delete all with same groupId
+      final hasGroupId = _entries.any((e) => e.groupId == identifier);
+
+      if (hasGroupId) {
+        // Delete all entries with this groupId
+        _entries.removeWhere((e) => e.groupId == identifier);
+      } else {
+        // Delete single entry by ID
+        _entries.removeWhere((e) => e.id == identifier);
+      }
+
+      _groupEntriesByDate();
+    });
+  }
+
+  void _initEntries() {
+    // TODO: Replace with actual database call
+    _entries = TempData.getDummyEntries();
+  }
+
+  Map<DateTime, List<Entry>> _groupedEntries = {};
+  final Map<DateTime, double> _dailyTotals = {};
 
   void _groupEntriesByDate() {
     _groupedEntries.clear();
@@ -98,8 +88,8 @@ class _EntriesScreenState extends State<EntriesScreen> {
       _groupedEntries.putIfAbsent(date, () => []).add(entry);
       _dailyTotals.update(
         date,
-        (value) => value + _parseAmount(entry.amount),
-        ifAbsent: () => _parseAmount(entry.amount),
+        (value) => value + entry.amount,
+        ifAbsent: () => entry.amount,
       );
     }
 
@@ -307,7 +297,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
                           ),
                         ),
                         Text(
-                          'Rs ${totalAmount.toStringAsFixed(0)}',
+                          'Rs ${totalAmount.toStringAsFixed(2)}',
                           style: textTheme.titleMedium?.copyWith(
                             color: colorScheme.primary,
                             fontWeight: FontWeight.normal,
@@ -321,12 +311,10 @@ class _EntriesScreenState extends State<EntriesScreen> {
                     final entry = mapEntry.value;
                     final isLastItem = entryIndex == entriesForDate.length - 1;
                     return EntryItem(
-                      imagePath: entry.imagePath,
-                      name: entry.name,
-                      description: entry.description,
-                      amount: entry.amount,
-                      convertedAmount: entry.convertedAmount,
+                      entry: entry,
                       isLastItem: isLastItem,
+                      onEntryUpdated: updateEntry,
+                      onEntryDeleted: deleteEntry,
                     );
                   }),
                 ],

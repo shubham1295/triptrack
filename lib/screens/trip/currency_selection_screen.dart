@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:triptrack/screens/set_budget_screen.dart';
+import 'package:triptrack/screens/trip/set_budget_screen.dart';
+import 'package:triptrack/screens/settings/currency_list_screen.dart';
 import 'package:triptrack/theme/app_constants.dart';
-import 'package:triptrack/screens/currency_list_screen.dart';
 
 class CurrencySelectionScreen extends StatefulWidget {
   final String tripName;
   final String? imagePath;
   final DateTime? startDate;
   final DateTime? endDate;
+  final bool isEditMode;
+  final String? currentCurrency;
 
   const CurrencySelectionScreen({
     super.key,
@@ -15,6 +17,8 @@ class CurrencySelectionScreen extends StatefulWidget {
     this.imagePath,
     this.startDate,
     this.endDate,
+    this.isEditMode = false,
+    this.currentCurrency,
   });
 
   @override
@@ -23,7 +27,14 @@ class CurrencySelectionScreen extends StatefulWidget {
 }
 
 class _CurrencySelectionScreenState extends State<CurrencySelectionScreen> {
-  String _selectedCurrency = 'USD'; // Set default to USD
+  late String _selectedCurrency;
+
+  @override
+  void initState() {
+    super.initState();
+    // Use currentCurrency if provided (edit mode), otherwise default to USD
+    _selectedCurrency = widget.currentCurrency ?? 'USD';
+  }
 
   void _navigateToCurrencyList() async {
     final selectedCode = await Navigator.of(
@@ -125,17 +136,23 @@ class _CurrencySelectionScreenState extends State<CurrencySelectionScreen> {
               const Spacer(),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => SetBudgetScreen(
-                        name: widget.tripName,
-                        homeCurrency: _selectedCurrency,
-                        startDate: widget.startDate,
-                        endDate: widget.endDate,
-                        imagePath: widget.imagePath,
+                  if (widget.isEditMode) {
+                    // Return the selected currency when in edit mode
+                    Navigator.pop(context, _selectedCurrency);
+                  } else {
+                    // Navigate to next screen in creation flow
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => SetBudgetScreen(
+                          name: widget.tripName,
+                          homeCurrency: _selectedCurrency,
+                          startDate: widget.startDate,
+                          endDate: widget.endDate,
+                          imagePath: widget.imagePath,
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 15),
@@ -143,7 +160,10 @@ class _CurrencySelectionScreenState extends State<CurrencySelectionScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text('Continue', style: TextStyle(fontSize: 18)),
+                child: Text(
+                  widget.isEditMode ? 'Select' : 'Continue',
+                  style: const TextStyle(fontSize: 18),
+                ),
               ),
               const SizedBox(height: 16),
             ],

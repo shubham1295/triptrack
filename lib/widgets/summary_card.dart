@@ -100,7 +100,7 @@ class SummaryCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progressValue,
               minHeight: 6.0,
-              backgroundColor: colorScheme.surfaceContainerHighest,
+              backgroundColor: colorScheme.primary.withValues(alpha: 0.2),
               valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
             ),
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import 'package:triptrack/theme/app_constants.dart';
 
 class SummaryScreen extends StatelessWidget {

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:triptrack/screens/add_trip_screen.dart';
-import 'package:triptrack/screens/currency_list_screen.dart'; // Import CurrencyListScreen
+import 'screens/trip/add_trip_screen.dart';
+import 'screens/settings/currency_list_screen.dart'; // Import CurrencyListScreen
 import 'services/theme_provider.dart';
 import 'theme/app_theme.dart';
-import 'screens/login_screen.dart'; // Import LoginScreen
+import 'screens/auth/login_screen.dart'; // Import LoginScreen
 
 void main() {
   runApp(
