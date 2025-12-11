@@ -41,6 +41,8 @@ dependencies:
   intl: ^0.20.2
   riverpod: ^3.0.3
   function_tree: ^0.9.1
+  fl_chart: ^0.68.0
+  csv: ^6.0.0
 
 dev_dependencies:
   flutter_test:

@@ -22,7 +22,7 @@ class TempData {
     ),
     Trip(
       id: '2',
-      name: 'EuropeEuropeEuropeEuropeEuropeEuropeEuropeEurope',
+      name: 'Europe',
       imagePath: 'assets/images/world-icon.jpg',
       homeCurrency: 'INR',
       startDate: DateTime(2026, 1, 1),
@@ -86,6 +86,7 @@ class TempData {
     String? notes,
     String? groupId,
     DateTime? endDate,
+    bool isExcludedFromMetrics = false,
   }) {
     final category = AppConstants.categories.firstWhere(
       (c) => c['name'] == categoryName,
@@ -103,6 +104,7 @@ class TempData {
       notes: notes,
       paymentMode: 'Cash',
       groupId: groupId,
+      isExcludedFromMetrics: isExcludedFromMetrics,
     );
   }
 
@@ -115,6 +117,7 @@ class TempData {
         amount: 12500,
         date: DateTime.now(),
         notes: 'Tokyo Flight',
+        isExcludedFromMetrics: true,
       ),
       createDummyEntry(
         id: '2',

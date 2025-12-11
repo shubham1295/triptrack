@@ -163,10 +163,14 @@ class EntryItem extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      amountString,
+                      entry.isExcludedFromMetrics
+                          ? '($amountString)'
+                          : amountString,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                            fontWeight: FontWeight.bold,
+                            color:
+                                entry.isExcludedFromMetrics ? Colors.red : null,
+                          ),
                     ),
                     const SizedBox(height: 4),
                     if (convertedAmountString != null)
