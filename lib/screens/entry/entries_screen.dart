@@ -111,7 +111,7 @@ class EntriesScreenState extends State<EntriesScreen> {
 
     showModalBottomSheet(
       context: context,
-      showDragHandle: true,
+      showDragHandle: false,
       useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.0)),
@@ -123,7 +123,7 @@ class EntriesScreenState extends State<EntriesScreen> {
             final textTheme = Theme.of(context).textTheme;
 
             return Container(
-              padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 24.0),
+              padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 24.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
