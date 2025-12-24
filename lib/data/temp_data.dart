@@ -77,6 +77,60 @@ class TempData {
 
   // ==================== ENTRY DATA MANAGEMENT ====================
 
+  /// Mutable list of entries
+  static final List<Entry> _entries = [
+    createDummyEntry(
+      id: '1',
+      categoryName: 'Flight',
+      amount: 12500,
+      date: DateTime.now(),
+      notes: 'Tokyo Flight',
+      isExcludedFromMetrics: true,
+    ),
+    createDummyEntry(
+      id: '2',
+      categoryName: 'Accomodation',
+      amount: 8000,
+      date: DateTime.now(),
+      notes: 'Shinjuku Hotel',
+    ),
+    createDummyEntry(
+      id: '3',
+      categoryName: 'Restaurant',
+      amount: 2500,
+      date: DateTime.now().subtract(const Duration(days: 1)),
+      notes: 'Dinner at Senso-ji',
+    ),
+    createDummyEntry(
+      id: '4',
+      categoryName: 'Transportation',
+      amount: 1200,
+      date: DateTime.now().subtract(const Duration(days: 1)),
+      notes: 'Taxi to Airport',
+    ),
+    createDummyEntry(
+      id: '5',
+      categoryName: 'Shopping',
+      amount: 3000,
+      date: DateTime.now().subtract(const Duration(days: 2)),
+      notes: 'Souvenirs',
+    ),
+    createDummyEntry(
+      id: '6',
+      categoryName: 'Shopping',
+      amount: 3000,
+      date: DateTime.now().subtract(const Duration(days: 2)),
+      notes: 'Souvenirs',
+    ),
+    createDummyEntry(
+      id: '7',
+      categoryName: 'Shopping',
+      amount: 3000,
+      date: DateTime.now().subtract(const Duration(days: 2)),
+      notes: 'Souvenirs',
+    ),
+  ];
+
   /// Creates a dummy entry with the given parameters
   static Entry createDummyEntry({
     required String id,
@@ -110,57 +164,6 @@ class TempData {
 
   /// Returns a list of dummy entries for testing
   static List<Entry> getDummyEntries() {
-    return [
-      createDummyEntry(
-        id: '1',
-        categoryName: 'Flight',
-        amount: 12500,
-        date: DateTime.now(),
-        notes: 'Tokyo Flight',
-        isExcludedFromMetrics: true,
-      ),
-      createDummyEntry(
-        id: '2',
-        categoryName: 'Accomodation',
-        amount: 8000,
-        date: DateTime.now(),
-        notes: 'Shinjuku Hotel',
-      ),
-      createDummyEntry(
-        id: '3',
-        categoryName: 'Restaurant',
-        amount: 2500,
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        notes: 'Dinner at Senso-ji',
-      ),
-      createDummyEntry(
-        id: '4',
-        categoryName: 'Transportation',
-        amount: 1200,
-        date: DateTime.now().subtract(const Duration(days: 1)),
-        notes: 'Taxi to Airport',
-      ),
-      createDummyEntry(
-        id: '5',
-        categoryName: 'Shopping',
-        amount: 3000,
-        date: DateTime.now().subtract(const Duration(days: 2)),
-        notes: 'Souvenirs',
-      ),
-      createDummyEntry(
-        id: '6',
-        categoryName: 'Shopping',
-        amount: 3000,
-        date: DateTime.now().subtract(const Duration(days: 2)),
-        notes: 'Souvenirs',
-      ),
-      createDummyEntry(
-        id: '7',
-        categoryName: 'Shopping',
-        amount: 3000,
-        date: DateTime.now().subtract(const Duration(days: 2)),
-        notes: 'Souvenirs',
-      ),
-    ];
+    return List.unmodifiable(_entries);
   }
 }
