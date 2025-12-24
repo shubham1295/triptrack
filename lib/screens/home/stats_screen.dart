@@ -36,6 +36,8 @@ class _StatsScreenState extends State<StatsScreen> {
     'December',
   ];
 
+  late Map<String, Color> _categoryColors;
+
   // Data variables
   late List<Entry> _allEntries;
   double _totalSpending = 0;
@@ -51,6 +53,27 @@ class _StatsScreenState extends State<StatsScreen> {
 
   void _loadData() {
     _allEntries = TempData.getDummyEntries();
+
+    final List<Color> colors = [
+      Colors.blueAccent,
+      Colors.redAccent,
+      Colors.greenAccent,
+      Colors.orangeAccent,
+      Colors.purpleAccent,
+      Colors.tealAccent,
+      Colors.pinkAccent,
+    ];
+
+    _categoryColors = {};
+    final Set<String> uniqueCategories = _allEntries
+        .map((entry) => entry.category['name'] as String)
+        .toSet();
+
+    int colorIndex = 0;
+    for (String category in uniqueCategories) {
+      _categoryColors[category] = colors[colorIndex % colors.length];
+      colorIndex++;
+    }
 
     // Simple calculations
     _totalSpending = _allEntries.fold(0, (sum, item) => sum + item.amount);
@@ -264,25 +287,15 @@ class _StatsScreenState extends State<StatsScreen> {
     final total = categoryTotals.values.fold(0.0, (sum, val) => sum + val);
 
     final List<PieChartSectionData> sections = [];
-    final List<Color> colors = [
-      Colors.blueAccent,
-      Colors.redAccent,
-      Colors.greenAccent,
-      Colors.orangeAccent,
-      Colors.purpleAccent,
-      Colors.tealAccent,
-      Colors.pinkAccent,
-    ];
-
     int i = 0;
     categoryTotals.forEach((category, amount) {
       final percentage = (amount / total) * 100;
-      final color = colors[i % colors.length];
+      final color = _categoryColors[category] ?? Colors.grey;
 
       IconData iconData = Icons.category;
-      if (category == 'Flight')
+      if (category == 'Flight') {
         iconData = Icons.flight;
-      else if (category == 'Accomodation')
+      } else if (category == 'Accomodation')
         iconData = Icons.hotel;
       else if (category == 'Restaurant' || category == 'Food')
         iconData = Icons.restaurant;
@@ -361,9 +374,9 @@ class _StatsScreenState extends State<StatsScreen> {
         final amount = categoryTotals[category]!;
 
         IconData iconData = Icons.category;
-        if (category == 'Flight')
+        if (category == 'Flight') {
           iconData = Icons.flight;
-        else if (category == 'Accomodation')
+        } else if (category == 'Accomodation')
           iconData = Icons.hotel;
         else if (category == 'Restaurant' || category == 'Food')
           iconData = Icons.restaurant;
@@ -397,16 +410,13 @@ class _StatsScreenState extends State<StatsScreen> {
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primaryContainer.withOpacity(0.5),
+                color:
+                    (_categoryColors[category] ??
+                            Theme.of(context).colorScheme.primaryContainer)
+                        .withOpacity(0.5),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                iconData,
-                color: Theme.of(context).colorScheme.primary,
-                size: 20,
-              ),
+              child: Icon(iconData, color: Colors.white, size: 20),
             ),
             title: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
