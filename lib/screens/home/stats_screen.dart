@@ -287,7 +287,7 @@ class _StatsScreenState extends State<StatsScreen> {
     final total = categoryTotals.values.fold(0.0, (sum, val) => sum + val);
 
     final List<PieChartSectionData> sections = [];
-    int i = 0;
+
     categoryTotals.forEach((category, amount) {
       final percentage = (amount / total) * 100;
       final color = _categoryColors[category] ?? Colors.grey;
@@ -322,7 +322,6 @@ class _StatsScreenState extends State<StatsScreen> {
           badgePositionPercentageOffset: 1.6, // Middle (Icon)
         ),
       );
-      i++;
     });
 
     return SizedBox(

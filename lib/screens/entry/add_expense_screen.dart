@@ -760,8 +760,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                             hintText: '0',
                             border: InputBorder.none,
                             hintStyle: TextStyle(
-                              color: colorScheme.onSurfaceVariant
-                                  .withOpacity(0.5),
+                              color: colorScheme.onSurfaceVariant.withOpacity(
+                                0.5,
+                              ),
                             ),
                           ),
                         ),
@@ -796,8 +797,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                               shape: BoxShape.circle,
                             ),
                             child: Text(
-                              AppConstants.currencyData[_selectedCurrency]
-                                      ?['symbol'] ??
+                              AppConstants
+                                      .currencyData[_selectedCurrency]?['symbol'] ??
                                   '\$',
                               style: TextStyle(
                                 fontSize: 12,
@@ -890,10 +891,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                           Text(
                             _spendAcrossDays
                                 ? _selectedDateRange == null
-                                    ? 'Select Date Range'
-                                    : '${DateFormat('MMM dd').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.end)}'
-                                : DateFormat('EEEE, MMM dd, yyyy')
-                                    .format(_selectedDate),
+                                      ? 'Select Date Range'
+                                      : '${DateFormat('MMM dd').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.end)}'
+                                : DateFormat(
+                                    'EEEE, MMM dd, yyyy',
+                                  ).format(_selectedDate),
                             style: theme.textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.w500,
                             ),
@@ -1027,7 +1029,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
 
             // Advanced Options
             Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              data: Theme.of(
+                context,
+              ).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
                 title: Text(
                   'Advanced Options',
@@ -1092,12 +1096,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     if (totalDays > 0) {
                       final double dailyAmount = calculatedAmount / totalDays;
                       final List<Entry> entries = [];
-                      final String groupId =
-                          DateTime.now().millisecondsSinceEpoch.toString();
+                      final String groupId = DateTime.now()
+                          .millisecondsSinceEpoch
+                          .toString();
 
                       for (int i = 0; i < totalDays; i++) {
-                        final date =
-                            _selectedDateRange!.start.add(Duration(days: i));
+                        final date = _selectedDateRange!.start.add(
+                          Duration(days: i),
+                        );
                         entries.add(
                           Entry(
                             id: '${groupId}_$i',
@@ -1134,7 +1140,8 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   }
 
                   final newEntry = Entry(
-                    id: widget.entryToEdit?.id ??
+                    id:
+                        widget.entryToEdit?.id ??
                         DateTime.now().millisecondsSinceEpoch.toString(),
                     amount: calculatedAmount,
                     currency: _selectedCurrency,
@@ -1153,7 +1160,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     Navigator.of(context).pop({
                       'action': 'update',
                       'oldGroupId': widget.entryToEdit!.groupId,
-      'entry': newEntry,
+                      'entry': newEntry,
                     });
                   } else {
                     Navigator.of(context).pop(newEntry);
