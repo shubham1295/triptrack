@@ -2,31 +2,98 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:triptrack/data/temp_data.dart';
 import 'package:triptrack/models/entry.dart';
 
-// Entries provider - uses real data from TempData
-final entriesProvider = Provider<List<Entry>>((ref) {
-  return TempData.getDummyEntries();
-});
+// Search Filter State Class
+class SearchFilters {
+  final String query;
+  final String? category;
+  final String? country;
+  final String? paymentMode;
+  final DateTime? startDate;
+  final DateTime? endDate;
 
-// Search query state
-final searchQueryProvider = StateProvider<String>((ref) => '');
+  const SearchFilters({
+    this.query = '',
+    this.category,
+    this.country,
+    this.paymentMode,
+    this.startDate,
+    this.endDate,
+  });
 
-// Selected category filter
-final selectedCategoryProvider = StateProvider<String?>((ref) => null);
+  SearchFilters copyWith({
+    String? query,
+    String? category,
+    String? country,
+    String? paymentMode,
+    DateTime? startDate,
+    DateTime? endDate,
+    bool clearCategory = false,
+    bool clearCountry = false,
+    bool clearPaymentMode = false,
+    bool clearDateRange = false,
+  }) {
+    return SearchFilters(
+      query: query ?? this.query,
+      category: clearCategory ? null : (category ?? this.category),
+      country: clearCountry ? null : (country ?? this.country),
+      paymentMode: clearPaymentMode ? null : (paymentMode ?? this.paymentMode),
+      startDate: clearDateRange ? null : (startDate ?? this.startDate),
+      endDate: clearDateRange ? null : (endDate ?? this.endDate),
+    );
+  }
 
-// Selected country filter
-final selectedCountryProvider = StateProvider<String?>((ref) => null);
+  bool get hasFilters =>
+      category != null ||
+      country != null ||
+      paymentMode != null ||
+      startDate != null ||
+      endDate != null;
+}
 
-// Selected payment mode filter
-final selectedPaymentModeProvider = StateProvider<String?>((ref) => null);
+// Search Filters Notifier
+class SearchFiltersNotifier extends AutoDisposeNotifier<SearchFilters> {
+  @override
+  SearchFilters build() {
+    return const SearchFilters();
+  }
 
-// Selected date range
-final selectedDateRangeProvider = StateProvider<(DateTime?, DateTime?)>(
-  (ref) => (null, null),
-);
+  void setQuery(String query) {
+    state = state.copyWith(query: query);
+  }
 
-// Get all unique categories
-final categoriesProvider = Provider<List<String>>((ref) {
-  final entries = ref.watch(entriesProvider);
+  void setCategory(String? category) {
+    state = state.copyWith(category: category, clearCategory: category == null);
+  }
+
+  void setCountry(String? country) {
+    state = state.copyWith(country: country, clearCountry: country == null);
+  }
+
+  void setPaymentMode(String? mode) {
+    state = state.copyWith(paymentMode: mode, clearPaymentMode: mode == null);
+  }
+
+  void setDateRange(DateTime? start, DateTime? end) {
+    state = state.copyWith(
+      startDate: start,
+      endDate: end,
+      clearDateRange: start == null && end == null,
+    );
+  }
+
+  void clearAll() {
+    state = const SearchFilters();
+  }
+}
+
+final searchFiltersProvider =
+    NotifierProvider.autoDispose<SearchFiltersNotifier, SearchFilters>(
+      SearchFiltersNotifier.new,
+    );
+
+// Filter Options Providers (Derived from TempData)
+final availableCategoriesProvider = Provider.autoDispose<List<String>>((ref) {
+  final entries = TempData.getDummyEntries();
   final categories = <String>{};
   for (var entry in entries) {
     categories.add(entry.category['name'] ?? '');
@@ -34,9 +101,8 @@ final categoriesProvider = Provider<List<String>>((ref) {
   return categories.toList()..sort();
 });
 
-// Get all unique countries/locations
-final countriesProvider = Provider<List<String>>((ref) {
-  final entries = ref.watch(entriesProvider);
+final availableCountriesProvider = Provider.autoDispose<List<String>>((ref) {
+  final entries = TempData.getDummyEntries();
   final countries = <String>{};
   for (var entry in entries) {
     if (entry.location != null) {
@@ -46,74 +112,60 @@ final countriesProvider = Provider<List<String>>((ref) {
   return countries.toList()..sort();
 });
 
-// Get all unique payment modes
-final paymentModesProvider = Provider<List<String>>((ref) {
-  final entries = ref.watch(entriesProvider);
-  final paymentModes = <String>{};
+final availablePaymentModesProvider = Provider.autoDispose<List<String>>((ref) {
+  final entries = TempData.getDummyEntries();
+  final modes = <String>{};
   for (var entry in entries) {
-    paymentModes.add(entry.paymentMode);
+    modes.add(entry.paymentMode);
   }
-  return paymentModes.toList()..sort();
+  return modes.toList()..sort();
 });
 
-// Filtered entries based on search and filters
-final filteredEntriesProvider = Provider<List<Entry>>((ref) {
-  final entries = ref.watch(entriesProvider);
-  final searchQuery = ref.watch(searchQueryProvider).toLowerCase();
-  final selectedCategory = ref.watch(selectedCategoryProvider);
-  final selectedCountry = ref.watch(selectedCountryProvider);
-  final selectedPaymentMode = ref.watch(selectedPaymentModeProvider);
-  final dateRange = ref.watch(selectedDateRangeProvider);
+// Filtered Entries Provider
+final searchResultsProvider = Provider.autoDispose<List<Entry>>((ref) {
+  final filters = ref.watch(searchFiltersProvider);
+  final allEntries = TempData.getDummyEntries();
 
-  return entries.where((entry) {
-    // Search by notes, location, or category name
-    final matchesSearch =
-        searchQuery.isEmpty ||
-        (entry.notes?.toLowerCase().contains(searchQuery) ?? false) ||
-        (entry.location?.toLowerCase().contains(searchQuery) ?? false) ||
-        entry.category['name'].toString().toLowerCase().contains(searchQuery);
+  if (filters.query.isEmpty && !filters.hasFilters) {
+    return allEntries;
+  }
 
-    // Filter by category
-    final matchesCategory =
-        selectedCategory == null || entry.category['name'] == selectedCategory;
+  final queryLower = filters.query.toLowerCase();
 
-    // Filter by country/location
-    final matchesCountry =
-        selectedCountry == null || entry.location == selectedCountry;
+  return allEntries.where((entry) {
+    // 1. Keyword Search
+    bool matchesQuery = true;
+    if (filters.query.isNotEmpty) {
+      matchesQuery =
+          (entry.notes?.toLowerCase().contains(queryLower) ?? false) ||
+          (entry.location?.toLowerCase().contains(queryLower) ?? false) ||
+          entry.category['name'].toString().toLowerCase().contains(queryLower);
+    }
 
-    // Filter by payment mode
-    final matchesPaymentMode =
-        selectedPaymentMode == null || entry.paymentMode == selectedPaymentMode;
+    // 2. Exact Match Filters
+    if (filters.category != null &&
+        entry.category['name'] != filters.category) {
+      return false;
+    }
+    if (filters.country != null && entry.location != filters.country) {
+      return false;
+    }
+    if (filters.paymentMode != null &&
+        entry.paymentMode != filters.paymentMode) {
+      return false;
+    }
 
-    // Filter by date range
-    bool matchesDateRange = true;
-    if (dateRange.$1 != null || dateRange.$2 != null) {
-      final startDate = dateRange.$1;
-      final endDate = dateRange.$2;
-      if (startDate != null && entry.date.isBefore(startDate)) {
-        matchesDateRange = false;
-      }
-      if (endDate != null &&
-          entry.date.isAfter(endDate.add(Duration(days: 1)))) {
-        matchesDateRange = false;
+    // 3. Date Range
+    if (filters.startDate != null) {
+      if (entry.date.isBefore(filters.startDate!)) return false;
+    }
+    if (filters.endDate != null) {
+      // Add one day to include the end date fully
+      if (entry.date.isAfter(filters.endDate!.add(const Duration(days: 1)))) {
+        return false;
       }
     }
 
-    return matchesSearch &&
-        matchesCategory &&
-        matchesCountry &&
-        matchesPaymentMode &&
-        matchesDateRange;
+    return matchesQuery;
   }).toList();
-});
-
-// Clear all filters
-final clearFiltersProvider = Provider<void Function()>((ref) {
-  return () {
-    ref.read(searchQueryProvider.notifier).state = '';
-    ref.read(selectedCategoryProvider.notifier).state = null;
-    ref.read(selectedCountryProvider.notifier).state = null;
-    ref.read(selectedPaymentModeProvider.notifier).state = null;
-    ref.read(selectedDateRangeProvider.notifier).state = (null, null);
-  };
 });
