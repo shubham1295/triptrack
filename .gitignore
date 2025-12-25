@@ -30,6 +30,7 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
+build/
 /build/
 /coverage/
 
@@ -44,3 +45,14 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 devtools_options.yaml
+
+# 1. Ignore Native Desktop Generated Files
+/linux/flutter/generated_plugin_registrant.cc
+/linux/flutter/generated_plugins.cmake
+/macos/Flutter/GeneratedPluginRegistrant.swift
+/windows/flutter/generated_plugin_registrant.cc
+/windows/flutter/generated_plugins.cmake
+
+# 2. Ignore Isar / Build Runner Generated Code
+# This keeps your repo clean and avoids merge conflicts in generated code
+*.g.dart
