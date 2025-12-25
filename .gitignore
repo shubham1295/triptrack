@@ -45,8 +45,23 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 devtools_options.yaml
+.gradle/
+local.properties
+**/GeneratedPluginRegistrant.java
 
-# 1. Ignore Native Desktop Generated Files
+# iOS/macOS
+**/Pods/
+DerivedData/
+.lsconnect
+!default.mode1v3
+!default.mode2v3
+!default.pbxuser
+!default.perspectivev3
+xcuserdata/
+**/config/Generated.xcconfig
+**/config/FlutterConfig.xcconfig
+
+# Ignore Native Desktop Generated Files
 /linux/flutter/generated_plugin_registrant.cc
 /linux/flutter/generated_plugins.cmake
 /macos/Flutter/GeneratedPluginRegistrant.swift
