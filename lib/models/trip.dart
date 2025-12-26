@@ -1,5 +1,11 @@
+import 'package:isar/isar.dart';
+import 'entry.dart';
+
+part 'trip.g.dart';
+
+@collection
 class Trip {
-  final String id;
+  Id id = Isar.autoIncrement;
   final String name;
   final String? imagePath;
   final String homeCurrency;
@@ -7,9 +13,13 @@ class Trip {
   final DateTime? endDate;
   final double totalBudget;
   final double dailyBudget;
+  final bool isSynced;
+  final DateTime lastModified;
+
+  final expenses = IsarLinks<Entry>();
 
   Trip({
-    required this.id,
+    this.id = Isar.autoIncrement,
     required this.name,
     this.imagePath,
     required this.homeCurrency,
@@ -17,10 +27,12 @@ class Trip {
     this.endDate,
     required this.totalBudget,
     required this.dailyBudget,
+    this.isSynced = false,
+    required this.lastModified,
   });
 
   Trip copyWith({
-    String? id,
+    Id? id,
     String? name,
     String? imagePath,
     String? homeCurrency,
@@ -28,6 +40,8 @@ class Trip {
     DateTime? endDate,
     double? totalBudget,
     double? dailyBudget,
+    bool? isSynced,
+    DateTime? lastModified,
   }) {
     return Trip(
       id: id ?? this.id,
@@ -38,6 +52,8 @@ class Trip {
       endDate: endDate ?? this.endDate,
       totalBudget: totalBudget ?? this.totalBudget,
       dailyBudget: dailyBudget ?? this.dailyBudget,
+      isSynced: isSynced ?? this.isSynced,
+      lastModified: lastModified ?? this.lastModified,
     );
   }
 
@@ -51,12 +67,14 @@ class Trip {
       'endDate': endDate?.toIso8601String(),
       'totalBudget': totalBudget,
       'dailyBudget': dailyBudget,
+      'isSynced': isSynced,
+      'lastModified': lastModified.toIso8601String(),
     };
   }
 
   factory Trip.fromJson(Map<String, dynamic> json) {
     return Trip(
-      id: json['id'] as String,
+      id: json['id'] as int? ?? Isar.autoIncrement,
       name: json['name'] as String,
       imagePath: json['imagePath'] as String?,
       homeCurrency: json['homeCurrency'] as String,
@@ -68,6 +86,10 @@ class Trip {
           : null,
       totalBudget: (json['totalBudget'] as num).toDouble(),
       dailyBudget: (json['dailyBudget'] as num).toDouble(),
+      isSynced: json['isSynced'] as bool? ?? false,
+      lastModified: json['lastModified'] != null
+          ? DateTime.parse(json['lastModified'] as String)
+          : DateTime.now(),
     );
   }
 }
