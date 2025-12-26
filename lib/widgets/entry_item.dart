@@ -19,9 +19,13 @@ class EntryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final categoryName = entry.category['name'] ?? 'Unknown';
-    final categoryIcon = entry.category['icon'] as IconData? ?? Icons.category;
-    final categoryColor = entry.category['color'] as Color? ?? Colors.grey;
+    final categoryName = entry.category?.name ?? 'General';
+    final categoryIcon = IconData(
+      entry.category?.icon ?? Icons.category.codePoint,
+      fontFamily: Icons.category.fontFamily,
+      fontPackage: Icons.category.fontPackage,
+    );
+    final categoryColor = Color(entry.category?.color ?? Colors.grey.value);
 
     final currencyData = AppConstants.currencyData[entry.currency];
     final currencySymbol = currencyData?['symbol'] ?? entry.currency;
@@ -135,7 +139,7 @@ class EntryItem extends StatelessWidget {
                       Text(
                         (entry.notes == null || entry.notes!.isEmpty)
                             ? categoryName
-                            : entry.notes,
+                            : entry.notes!,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),

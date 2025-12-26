@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:triptrack/screens/trip/add_trip_screen.dart';
 import 'package:triptrack/theme/app_constants.dart';
 import 'package:triptrack/theme/app_strings.dart';
 import 'package:triptrack/widgets/trip_card.dart';
-import 'package:triptrack/data/temp_data.dart';
+import 'package:triptrack/providers/trip_provider.dart';
+import 'package:triptrack/utils/formatting_util.dart';
 
 class AppDrawer extends StatefulWidget {
   const AppDrawer({super.key});
@@ -18,205 +20,249 @@ class _AppDrawerState extends State<AppDrawer> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Get trip data from centralized source
-    final activeTrip = TempData.getActiveTrip();
-    final previousTrips = TempData.getPreviousTrips();
+    return Consumer(
+      builder: (context, ref, child) {
+        final activeTripAsync = ref.watch(currentActiveTripProvider);
+        final previousTripsAsync = ref.watch(previousTripsProvider);
+        final now = DateTime.now();
+        final today = DateTime(now.year, now.month, now.day);
 
-    return Drawer(
-      width: MediaQuery.of(context).size.width * AppConstants.drawerWidthFactor,
-      child: Column(
-        children: [
-          // Header Section with User Profile
-          Container(
-            decoration: BoxDecoration(
-              gradient: isDark
-                  ? null
-                  : LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        theme.colorScheme.primary,
-                        theme.colorScheme.primaryContainer,
-                      ],
-                    ),
-              color: isDark ? theme.scaffoldBackgroundColor : null,
-            ),
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // User Profile Section
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.luggage,
-                          color: isDark
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onPrimary,
-                          size: 30,
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          AppStrings.myTrips,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: isDark
-                                ? theme.colorScheme.onSurface
-                                : theme.colorScheme.onPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 22,
-                          ),
-                        ),
-                        const Spacer(),
-                        const _AddTripButton(),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    // Active Trip Card with Badge
-                    if (activeTrip != null)
-                      Container(
-                        decoration: BoxDecoration(
-                          color: isDark
-                              ? theme.colorScheme.surface.withValues(alpha: 0.3)
-                              : Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isDark
-                                ? theme.colorScheme.primary.withValues(
-                                    alpha: 0.3,
-                                  )
-                                : Colors.white.withValues(alpha: 0.3),
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 5,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.secondary,
-                                      borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: theme.colorScheme.secondary
-                                              .withValues(alpha: 0.3),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.circle,
-                                          size: 10,
-                                          color: theme.colorScheme.onSecondary,
-                                        ),
-                                        const SizedBox(width: 5),
-                                        Text(
-                                          'Active',
-                                          style: theme.textTheme.labelSmall
-                                              ?.copyWith(
-                                                color: theme
-                                                    .colorScheme
-                                                    .onSecondary,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            TripCard(
-                              imageUrl:
-                                  activeTrip.imagePath ??
-                                  'assets/images/world-icon.jpg',
-                              title: activeTrip.name,
-                              date: _formatDateRange(
-                                activeTrip.startDate,
-                                activeTrip.endDate,
-                              ),
-                              budget: _formatBudget(
-                                activeTrip.dailyBudget,
-                                activeTrip.totalBudget,
-                              ),
-                              isInDrawer: true,
-                              trip: activeTrip,
-                              onDataChanged: () {
-                                setState(() {
-                                  // Refresh the drawer when data changes
-                                });
-                              },
-                            ),
+        return Drawer(
+          width:
+              MediaQuery.of(context).size.width *
+              AppConstants.drawerWidthFactor,
+          child: Column(
+            children: [
+              // Header Section with User Profile
+              Container(
+                decoration: BoxDecoration(
+                  gradient: isDark
+                      ? null
+                      : LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            theme.colorScheme.primary,
+                            theme.colorScheme.primaryContainer,
                           ],
                         ),
+                  color: isDark ? theme.scaffoldBackgroundColor : null,
+                ),
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // User Profile Section
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.luggage,
+                              color: isDark
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onPrimary,
+                              size: 30,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              AppStrings.myTrips,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: isDark
+                                    ? theme.colorScheme.onSurface
+                                    : theme.colorScheme.onPrimary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 22,
+                              ),
+                            ),
+                            const Spacer(),
+                            const _AddTripButton(),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        // Active Trip Card with Badge
+                        activeTripAsync.when(
+                          data: (activeTrip) => activeTrip != null
+                              ? Container(
+                                  decoration: BoxDecoration(
+                                    color: isDark
+                                        ? theme.colorScheme.surface.withValues(
+                                            alpha: 0.3,
+                                          )
+                                        : Colors.white.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: isDark
+                                          ? theme.colorScheme.primary
+                                                .withValues(alpha: 0.3)
+                                          : Colors.white.withValues(alpha: 0.3),
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      if (activeTrip.endDate != null &&
+                                          !activeTrip.endDate!.isBefore(today))
+                                        Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                            12,
+                                            12,
+                                            12,
+                                            8,
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 5,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: theme
+                                                      .colorScheme
+                                                      .secondary,
+                                                  borderRadius:
+                                                      BorderRadius.circular(16),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: theme
+                                                          .colorScheme
+                                                          .secondary
+                                                          .withValues(
+                                                            alpha: 0.3,
+                                                          ),
+                                                      blurRadius: 4,
+                                                      offset: const Offset(
+                                                        0,
+                                                        2,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.circle,
+                                                      size: 10,
+                                                      color: theme
+                                                          .colorScheme
+                                                          .onSecondary,
+                                                    ),
+                                                    const SizedBox(width: 5),
+                                                    Text(
+                                                      'Active',
+                                                      style: theme
+                                                          .textTheme
+                                                          .labelSmall
+                                                          ?.copyWith(
+                                                            color: theme
+                                                                .colorScheme
+                                                                .onSecondary,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      TripCard(
+                                        imageUrl:
+                                            activeTrip.imagePath ??
+                                            'assets/images/world-icon.jpg',
+                                        title: activeTrip.name,
+                                        date: _formatDateRange(
+                                          activeTrip.startDate,
+                                          activeTrip.endDate,
+                                        ),
+                                        budget: _formatBudget(
+                                          activeTrip.dailyBudget,
+                                          activeTrip.totalBudget,
+                                        ),
+                                        isInDrawer: true,
+                                        trip: activeTrip,
+                                        onDataChanged: () {
+                                          // Riverpod will automatically refresh
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : const SizedBox.shrink(),
+                          loading: () =>
+                              const Center(child: CircularProgressIndicator()),
+                          error: (err, stack) => Text('Error: $err'),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // Previous Trips Section
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.history,
+                      size: 18,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      AppStrings.previousTrip,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
                       ),
-                    const SizedBox(height: 16),
+                    ),
                   ],
                 ),
               ),
-            ),
-          ),
 
-          // Previous Trips Section
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.history,
-                  size: 18,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  AppStrings.previousTrip,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
+              // Previous Trips List
+              Expanded(
+                child: previousTripsAsync.when(
+                  data: (previousTrips) => ListView.separated(
+                    padding: const EdgeInsets.all(16.0),
+                    itemCount: previousTrips.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final trip = previousTrips[index];
+                      return TripCard(
+                        imageUrl:
+                            trip.imagePath ?? 'assets/images/world-icon.jpg',
+                        title: trip.name,
+                        date: _formatDateRange(trip.startDate, trip.endDate),
+                        budget: _formatBudget(
+                          trip.dailyBudget,
+                          trip.totalBudget,
+                        ),
+                        trip: trip,
+                        onDataChanged: () {
+                          // Riverpod will automatically refresh
+                        },
+                      );
+                    },
                   ),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (err, stack) => Text('Error: $err'),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-
-          // Previous Trips List
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16.0),
-              itemCount: previousTrips.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final trip = previousTrips[index];
-                return TripCard(
-                  imageUrl: trip.imagePath ?? 'assets/images/world-icon.jpg',
-                  title: trip.name,
-                  date: _formatDateRange(trip.startDate, trip.endDate),
-                  budget: _formatBudget(trip.dailyBudget, trip.totalBudget),
-                  trip: trip,
-                  onDataChanged: () {
-                    setState(() {
-                      // Refresh the drawer when data changes
-                    });
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -234,32 +280,7 @@ class _AppDrawerState extends State<AppDrawer> {
 
   /// Formats the budget for display
   String _formatBudget(double dailyBudget, double totalBudget) {
-    return 'Rs. ${dailyBudget.toStringAsFixed(0)} / Rs. ${_formatNumber(totalBudget)}';
-  }
-
-  /// Formats a number with commas
-  String _formatNumber(double number) {
-    final str = number.toStringAsFixed(0);
-    final parts = <String>[];
-    var remaining = str;
-
-    if (remaining.length > 3) {
-      parts.insert(0, remaining.substring(remaining.length - 3));
-      remaining = remaining.substring(0, remaining.length - 3);
-
-      while (remaining.length > 2) {
-        parts.insert(0, remaining.substring(remaining.length - 2));
-        remaining = remaining.substring(0, remaining.length - 2);
-      }
-
-      if (remaining.isNotEmpty) {
-        parts.insert(0, remaining);
-      }
-    } else {
-      return str;
-    }
-
-    return parts.join(',');
+    return 'Rs. ${FormattingUtil.formatNumber(dailyBudget)} / Rs. ${FormattingUtil.formatNumber(totalBudget)}';
   }
 
   /// Gets the month name abbreviation

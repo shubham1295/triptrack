@@ -121,7 +121,12 @@ class PickCategoryScreen extends StatelessWidget {
                 ),
                 itemCount: AppConstants.categories.length,
                 itemBuilder: (context, index) {
-                  final category = AppConstants.categories[index];
+                  final categoryMap = AppConstants.categories[index];
+                  final category = Category(
+                    name: categoryMap['name'] as String?,
+                    icon: (categoryMap['icon'] as IconData).codePoint,
+                    color: (categoryMap['color'] as Color).value,
+                  );
                   return InkWell(
                     onTap: () async {
                       if (isSelecting) {
@@ -148,21 +153,24 @@ class PickCategoryScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(16), // Changed from 8
                           decoration: BoxDecoration(
-                            color: (category['color'] as Color).withValues(
-                              alpha: 0.1, // Changed from 0.15
-                            ),
+                            color: Color(
+                              category.color ?? Colors.blue.value,
+                            ).withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
-                            category['icon'] as IconData,
-                            color: category['color'] as Color,
+                            IconData(
+                              category.icon ?? Icons.category.codePoint,
+                              fontFamily: Icons.category.fontFamily,
+                              fontPackage: Icons.category.fontPackage,
+                            ),
+                            color: Color(category.color ?? Colors.blue.value),
                             size: 24,
                           ),
                         ),
                         const SizedBox(height: 8),
-                        // Removed Padding widget around Text
                         Text(
-                          category['name'] as String,
+                          category.name ?? 'General',
                           textAlign: TextAlign.center,
                           maxLines: 1, // Changed from 2
                           overflow: TextOverflow.ellipsis,
