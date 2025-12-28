@@ -123,7 +123,7 @@ Roadmap (ideas)
 - Improved analytics and filtering
 
 License
-This project is open source — add a LICENSE file (MIT recommended) to make licensing explicit.
+This project is open source — TODO add a LICENSE file (MIT recommended) to make licensing explicit.
 
 Maintainer: [shubham1295](https://github.com/shubham1295)  
 
