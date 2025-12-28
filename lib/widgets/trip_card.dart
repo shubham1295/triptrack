@@ -30,10 +30,6 @@ class TripCard extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return InkWell(
-      onTap: () {
-        // TODO: Implement trip selection logic if needed
-        // For now, it just shows the trip in drawer context
-      },
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(12),

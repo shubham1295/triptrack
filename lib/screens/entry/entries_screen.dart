@@ -6,6 +6,7 @@ import '../../widgets/entry_item.dart';
 import '../../widgets/summary_card.dart';
 import '../../data/temp_data.dart';
 import '../../providers/trip_provider.dart';
+import '../../utils/formatting_util.dart';
 
 class EntriesScreen extends StatefulWidget {
   static const routeName = '/entries';
@@ -222,8 +223,6 @@ class EntriesScreenState extends State<EntriesScreen> {
 
             final totalBudget = activeTrip?.totalBudget ?? 0.0;
             final dailyBudget = activeTrip?.dailyBudget ?? 0.0;
-            final currency = activeTrip?.homeCurrency ?? 'INR';
-
             final totalProgress = totalBudget > 0
                 ? (totalSpent / totalBudget).clamp(0.0, 1.0)
                 : 0.0;
@@ -248,22 +247,24 @@ class EntriesScreenState extends State<EntriesScreen> {
                       Expanded(
                         child: SummaryCard(
                           title: 'Total',
-                          amount: '$currency ${totalSpent.toStringAsFixed(0)}',
+                          amount: totalSpent,
                           budget:
-                              '${totalSpent.toStringAsFixed(0)}/${totalBudget.toStringAsFixed(0)}',
+                              '${FormattingUtil.formatCurrency(totalSpent, activeTrip?.homeCurrency ?? 'USD')}/${FormattingUtil.formatCurrency(totalBudget, activeTrip?.homeCurrency ?? 'USD')}',
                           progressValue: totalProgress,
                           onMoreTap: () => _showDetailOptionsSheet(context),
+                          currency: activeTrip?.homeCurrency ?? 'USD',
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: SummaryCard(
                           title: 'Today',
-                          amount: '$currency ${todaySpent.toStringAsFixed(0)}',
+                          amount: todaySpent,
                           budget:
-                              '${todaySpent.toStringAsFixed(0)}/${dailyBudget.toStringAsFixed(0)}',
+                              '${FormattingUtil.formatCurrency(todaySpent, activeTrip?.homeCurrency ?? 'USD')}/${FormattingUtil.formatCurrency(dailyBudget, activeTrip?.homeCurrency ?? 'USD')}',
                           progressValue: todayProgress,
                           onMoreTap: () => _showDetailOptionsSheet(context),
+                          currency: activeTrip?.homeCurrency ?? 'USD',
                         ),
                       ),
                     ],
@@ -354,7 +355,10 @@ class EntriesScreenState extends State<EntriesScreen> {
                                   ),
                                 ),
                                 Text(
-                                  '$currency ${totalAmount.toStringAsFixed(2)}',
+                                  FormattingUtil.formatCurrency(
+                                    totalAmount,
+                                    activeTrip?.homeCurrency ?? 'USD',
+                                  ),
                                   style: textTheme.titleMedium?.copyWith(
                                     color: colorScheme.primary,
                                     fontWeight: FontWeight.normal,
@@ -373,6 +377,7 @@ class EntriesScreenState extends State<EntriesScreen> {
                               isLastItem: isLastItem,
                               onEntryUpdated: updateEntry,
                               onEntryDeleted: deleteEntry,
+                              homeCurrency: activeTrip?.homeCurrency ?? 'USD',
                             );
                           }),
                         ],

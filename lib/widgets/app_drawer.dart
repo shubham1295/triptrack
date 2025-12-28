@@ -184,6 +184,7 @@ class _AppDrawerState extends State<AppDrawer> {
                                         budget: _formatBudget(
                                           activeTrip.dailyBudget,
                                           activeTrip.totalBudget,
+                                          activeTrip.homeCurrency,
                                         ),
                                         isInDrawer: true,
                                         trip: activeTrip,
@@ -246,6 +247,7 @@ class _AppDrawerState extends State<AppDrawer> {
                         budget: _formatBudget(
                           trip.dailyBudget,
                           trip.totalBudget,
+                          trip.homeCurrency,
                         ),
                         trip: trip,
                         onDataChanged: () {
@@ -279,8 +281,12 @@ class _AppDrawerState extends State<AppDrawer> {
   }
 
   /// Formats the budget for display
-  String _formatBudget(double dailyBudget, double totalBudget) {
-    return 'Rs. ${FormattingUtil.formatNumber(dailyBudget)} / Rs. ${FormattingUtil.formatNumber(totalBudget)}';
+  String _formatBudget(
+    double dailyBudget,
+    double totalBudget,
+    String homeCurrency,
+  ) {
+    return '${FormattingUtil.formatCurrency(dailyBudget, homeCurrency)} / ${FormattingUtil.formatCurrency(totalBudget, homeCurrency)}';
   }
 
   /// Gets the month name abbreviation

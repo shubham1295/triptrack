@@ -145,13 +145,12 @@ class PickCategoryScreen extends StatelessWidget {
                         }
                       }
                     },
-                    borderRadius: BorderRadius.circular(20), // Changed from 16
+                    borderRadius: BorderRadius.circular(20),
                     child: Column(
-                      // Changed from Container to Column directly
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(16), // Changed from 8
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: Color(
                               category.color ?? Colors.blue.value,
@@ -172,12 +171,12 @@ class PickCategoryScreen extends StatelessWidget {
                         Text(
                           category.name ?? 'General',
                           textAlign: TextAlign.center,
-                          maxLines: 1, // Changed from 2
+                          maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w500, // Changed from w600
+                            fontWeight: FontWeight.w500,
                             color: colorScheme.onSurface,
-                            fontSize: 10, // Added fontSize
+                            fontSize: 10,
                           ),
                         ),
                       ],

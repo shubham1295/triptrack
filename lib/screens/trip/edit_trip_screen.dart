@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:triptrack/models/trip.dart';
-import 'package:triptrack/theme/app_constants.dart';
+
 import 'package:triptrack/screens/trip/currency_selection_screen.dart';
 
 class EditTripScreen extends StatefulWidget {
@@ -192,8 +192,6 @@ class _EditTripScreenState extends State<EditTripScreen> {
   }
 
   String _getSummaryText() {
-    final currencySymbol =
-        AppConstants.currencyData[_homeCurrency]?['symbol'] ?? '';
     final parts = <String>[];
 
     parts.add(
@@ -211,15 +209,11 @@ class _EditTripScreenState extends State<EditTripScreen> {
     final dailyBudget = _calculateDailyBudget();
 
     if (totalBudget > 0) {
-      parts.add(
-        'with a total budget of $currencySymbol${totalBudget.toStringAsFixed(0)}',
-      );
+      parts.add('with a total budget of ${totalBudget.toStringAsFixed(0)}');
     }
 
     if (dailyBudget > 0) {
-      parts.add(
-        'and a daily budget of $currencySymbol${dailyBudget.toStringAsFixed(0)}',
-      );
+      parts.add('and a daily budget of ${dailyBudget.toStringAsFixed(0)}');
     }
 
     parts.add('using $_homeCurrency as your home currency.');
@@ -230,8 +224,9 @@ class _EditTripScreenState extends State<EditTripScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currencySymbol =
-        AppConstants.currencyData[_homeCurrency]?['symbol'] ?? '';
+    final currencySymbol = NumberFormat.simpleCurrency(
+      name: _homeCurrency,
+    ).currencySymbol;
     final dailyBudget = _calculateDailyBudget();
 
     return GestureDetector(

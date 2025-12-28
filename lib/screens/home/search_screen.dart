@@ -5,7 +5,6 @@ import 'package:triptrack/providers/search_providers.dart';
 import 'package:triptrack/theme/app_colors.dart';
 import 'package:triptrack/screens/entry/add_expense_screen.dart';
 import 'package:triptrack/models/entry.dart';
-import 'package:triptrack/theme/app_constants.dart';
 
 class SearchScreen extends ConsumerWidget {
   const SearchScreen({super.key});
@@ -524,10 +523,7 @@ class _SearchResultCard extends StatelessWidget {
     final categoryIcon = entry.category?.icon;
     final categoryName = entry.category?.name ?? 'Unknown';
 
-    // Amount formatting matching EntryItem
-    final currencyData = AppConstants.currencyData[entry.currency];
-    final currencySymbol = currencyData?['symbol'] ?? entry.currency;
-    final amountString = '$currencySymbol ${entry.amount.toStringAsFixed(0)}';
+    final amountString = '${entry.amount.toStringAsFixed(0)}';
 
     // Converted amount logic (Yen)
     String? convertedAmountString;
@@ -542,7 +538,7 @@ class _SearchResultCard extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) =>
-                AddExpenseScreen(category: entry.category, entryToEdit: entry),
+                AddExpenseScreen(category: entry.category!, entryToEdit: entry),
           ),
         );
       },

@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:triptrack/models/trip.dart';
 import 'package:triptrack/providers/trip_provider.dart';
-import 'package:triptrack/theme/app_constants.dart';
 
 class SummaryScreen extends ConsumerWidget {
   final String name;
@@ -28,8 +27,9 @@ class SummaryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final currencySymbol =
-        AppConstants.currencyData[homeCurrency]?['symbol'] ?? '';
+    final currencySymbol = NumberFormat.simpleCurrency(
+      name: homeCurrency,
+    ).currencySymbol;
 
     return Scaffold(
       appBar: AppBar(

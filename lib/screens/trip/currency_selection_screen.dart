@@ -1,7 +1,7 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:triptrack/screens/trip/set_budget_screen.dart';
 import 'package:triptrack/screens/settings/currency_list_screen.dart';
-import 'package:triptrack/theme/app_constants.dart';
 
 class CurrencySelectionScreen extends StatefulWidget {
   final String tripName;
@@ -50,7 +50,7 @@ class _CurrencySelectionScreenState extends State<CurrencySelectionScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final selectedCurrencyData = AppConstants.currencyData[_selectedCurrency];
+    final format = NumberFormat.simpleCurrency(name: _selectedCurrency);
 
     return Scaffold(
       appBar: AppBar(
@@ -102,9 +102,7 @@ class _CurrencySelectionScreenState extends State<CurrencySelectionScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        selectedCurrencyData != null
-                            ? '${selectedCurrencyData['symbol']} ${selectedCurrencyData['name']} ($_selectedCurrency)'
-                            : 'Select Currency',
+                        '${format.currencySymbol} ${format.currencyName} ($_selectedCurrency)',
                         style: const TextStyle(fontSize: 16),
                       ),
                       const Icon(Icons.arrow_forward_ios, size: 16),
