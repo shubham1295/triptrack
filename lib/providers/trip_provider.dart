@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/trip.dart';
+import '../models/entry.dart';
 import '../services/isar_service.dart';
 
 class TripNotifier extends AsyncNotifier<List<Trip>> {
@@ -64,4 +65,12 @@ final previousTripsProvider = Provider<AsyncValue<List<Trip>>>((ref) {
     return trips.where((trip) => trip.id != currentActive.id).toList()
       ..sort((a, b) => b.id.compareTo(a.id));
   });
+});
+
+final activeTripEntriesProvider = FutureProvider<List<Entry>>((ref) async {
+  final activeTrip = ref.watch(currentActiveTripProvider).asData?.value;
+  if (activeTrip == null) return [];
+
+  final isarService = ref.watch(isarServiceProvider);
+  return isarService.getEntriesForTrip(activeTrip.id);
 });

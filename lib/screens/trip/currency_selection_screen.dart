@@ -102,7 +102,7 @@ class _CurrencySelectionScreenState extends State<CurrencySelectionScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '${format.currencySymbol} ${format.currencyName} ($_selectedCurrency)',
+                        '${format.currencySymbol} ${format.currencyName}',
                         style: const TextStyle(fontSize: 16),
                       ),
                       const Icon(Icons.arrow_forward_ios, size: 16),

@@ -523,7 +523,7 @@ class _SearchResultCard extends StatelessWidget {
     final categoryIcon = entry.category?.icon;
     final categoryName = entry.category?.name ?? 'Unknown';
 
-    final amountString = '${entry.amount.toStringAsFixed(0)}';
+    final amountString = entry.amount.toStringAsFixed(0);
 
     // Converted amount logic (Yen)
     String? convertedAmountString;

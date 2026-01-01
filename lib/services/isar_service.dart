@@ -73,11 +73,45 @@ class IsarService {
     return await isar.entrys.filter().groupIdEqualTo(groupId).findAll();
   }
 
+  Future<List<Entry>> getEntriesForTrip(int tripId) async {
+    final isar = await db;
+    final trip = await isar.trips.get(tripId);
+    if (trip != null) {
+      await trip.expenses.load();
+      return trip.expenses.toList();
+    }
+    return [];
+  }
+
   Future<void> deleteEntry(int id) async {
     final isar = await db;
     await isar.writeTxn(() async {
       await isar.entrys.delete(id);
     });
+  }
+
+  Future<void> addEntryToTrip(int tripId, Entry entry) async {
+    final isar = await db;
+    final trip = await isar.trips.get(tripId);
+    if (trip != null) {
+      await isar.writeTxn(() async {
+        await isar.entrys.put(entry);
+        trip.expenses.add(entry);
+        await trip.expenses.save();
+      });
+    }
+  }
+
+  Future<void> addEntriesToTrip(int tripId, List<Entry> entries) async {
+    final isar = await db;
+    final trip = await isar.trips.get(tripId);
+    if (trip != null) {
+      await isar.writeTxn(() async {
+        await isar.entrys.putAll(entries);
+        trip.expenses.addAll(entries);
+        await trip.expenses.save();
+      });
+    }
   }
 }
 

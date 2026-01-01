@@ -37,13 +37,11 @@ class EntryItem extends StatelessWidget {
 
     // Show converted amount in home currency if exchange rate differs from 1.0
     String? convertedAmountString;
-    if (entry.exchangeRate != 1.0) {
-      final converted = entry.amount * entry.exchangeRate;
-      convertedAmountString = FormattingUtil.formatCurrency(
-        converted,
-        entry.currency,
-      );
-    }
+    final converted = entry.amount * entry.exchangeRate;
+    convertedAmountString = FormattingUtil.formatCurrency(
+      converted,
+      entry.currency,
+    );
 
     return Column(
       children: [
@@ -68,7 +66,7 @@ class EntryItem extends StatelessWidget {
                 onEntryDeleted?.call(groupId);
               } else {
                 // Delete single entry
-                onEntryDeleted?.call(result['entryId'] as String);
+                onEntryDeleted?.call(result['entryId'].toString());
               }
             } else if (result is Map && result['action'] == 'update') {
               // Entry was updated - handle grouped entry updates
@@ -167,13 +165,12 @@ class EntryItem extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    if (convertedAmountString != null)
-                      Text(
-                        convertedAmountString,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.copyWith(color: Colors.grey),
-                      ),
+                    Text(
+                      convertedAmountString,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                    ),
                   ],
                 ),
               ],

@@ -11,6 +11,7 @@ import 'package:triptrack/screens/home/search_screen.dart';
 import 'package:triptrack/screens/settings/settings_screen.dart';
 import 'package:triptrack/providers/trip_provider.dart';
 import 'package:triptrack/screens/trip/add_trip_screen.dart';
+import 'package:triptrack/services/isar_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -161,11 +162,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     builder: (context) => const PickCategoryScreen(),
                   ),
                 );
-                if (result != null && _entriesScreenKey.currentState != null) {
-                  if (result is Entry) {
-                    _entriesScreenKey.currentState!.addEntry(result);
-                  } else if (result is List<Entry>) {
-                    _entriesScreenKey.currentState!.addEntries(result);
+
+                if (result != null) {
+                  final activeTripAsync = ref.read(currentActiveTripProvider);
+                  final activeTrip = activeTripAsync.asData?.value;
+
+                  if (activeTrip != null) {
+                    final isarService = ref.read(isarServiceProvider);
+
+                    if (result is Entry) {
+                      await isarService.addEntryToTrip(activeTrip.id, result);
+                      // Refresh the trip provider to reflect changes if necessary
+                      ref.invalidate(tripProvider);
+                      ref.invalidate(activeTripEntriesProvider);
+                    } else if (result is List<Entry>) {
+                      await isarService.addEntriesToTrip(activeTrip.id, result);
+                      ref.invalidate(tripProvider);
+                      ref.invalidate(activeTripEntriesProvider);
+                    }
+                  } else {
+                    // TODO: Handle case where no trip is active/selected
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('No active trip selected!'),
+                        ),
+                      );
+                    }
                   }
                 }
               },

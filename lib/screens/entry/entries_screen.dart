@@ -4,106 +4,94 @@ import 'package:intl/intl.dart';
 import '../../models/entry.dart';
 import '../../widgets/entry_item.dart';
 import '../../widgets/summary_card.dart';
-import '../../data/temp_data.dart';
+
 import '../../providers/trip_provider.dart';
 import '../../utils/formatting_util.dart';
 
-class EntriesScreen extends StatefulWidget {
+import '../../services/isar_service.dart';
+
+class EntriesScreen extends ConsumerStatefulWidget {
   static const routeName = '/entries';
   const EntriesScreen({super.key});
 
   @override
-  State<EntriesScreen> createState() => EntriesScreenState();
+  ConsumerState<EntriesScreen> createState() => EntriesScreenState();
 }
 
-class EntriesScreenState extends State<EntriesScreen> {
-  late final List<Entry> _entries;
+class EntriesScreenState extends ConsumerState<EntriesScreen> {
+  // _entries is now derived from provider
+  // grouping is done on the fly or memoized
 
   @override
   void initState() {
     super.initState();
-    _initEntries();
-    _groupEntriesByDate();
   }
 
-  void addEntry(Entry entry) {
-    setState(() {
-      _entries.insert(0, entry);
-      _groupEntriesByDate();
-    });
-  }
-
-  void addEntries(List<Entry> newEntries) {
-    setState(() {
-      _entries.insertAll(0, newEntries);
-      _groupEntriesByDate();
-    });
-  }
-
-  void updateEntry(Entry updatedEntry) {
-    setState(() {
-      final index = _entries.indexWhere((e) => e.id == updatedEntry.id);
-      if (index != -1) {
-        // Update existing entry
-        _entries[index] = updatedEntry;
-      } else {
-        // Add new entry (happens when editing grouped entries)
-        _entries.insert(0, updatedEntry);
-      }
-      _groupEntriesByDate();
-    });
-  }
-
-  void deleteEntry(String identifier) {
-    setState(() {
-      // Check if identifier is a groupId or entryId
-      // If any entry has this as groupId, delete all with same groupId
-      final hasGroupId = _entries.any((e) => e.groupId == identifier);
-
-      if (hasGroupId) {
-        // Delete all entries with this groupId
-        _entries.removeWhere((e) => e.groupId == identifier);
-      } else {
-        // Delete single entry by ID - parse identifier to int as Entry.id is Id (int)
-        final id = int.tryParse(identifier);
-        if (id != null) {
-          _entries.removeWhere((e) => e.id == id);
-        }
-      }
-
-      _groupEntriesByDate();
-    });
-  }
-
-  void _initEntries() {
-    // We must create a mutable list because TempData.getDummyEntries() returns an unmodifiable list
-    _entries = List.from(TempData.getDummyEntries());
-  }
-
-  Map<DateTime, List<Entry>> _groupedEntries = {};
-  final Map<DateTime, double> _dailyTotals = {};
-
-  void _groupEntriesByDate() {
-    _groupedEntries.clear();
-    _dailyTotals.clear();
-
-    for (var entry in _entries) {
-      // Normalize date to remove time component for grouping
+  // Helper to group entries
+  Map<DateTime, List<Entry>> _groupEntriesByDate(List<Entry> entries) {
+    final Map<DateTime, List<Entry>> groupedEntries = {};
+    for (var entry in entries) {
       final date = DateTime(entry.date.year, entry.date.month, entry.date.day);
+      groupedEntries.putIfAbsent(date, () => []).add(entry);
+    }
+    // Sort dates descending
+    return Map.fromEntries(
+      groupedEntries.entries.toList()
+        ..sort((e1, e2) => e2.key.compareTo(e1.key)),
+    );
+  }
 
-      _groupedEntries.putIfAbsent(date, () => []).add(entry);
-      _dailyTotals.update(
+  // Calculate daily totals
+  Map<DateTime, double> _calculateDailyTotals(List<Entry> entries) {
+    final Map<DateTime, double> dailyTotals = {};
+    for (var entry in entries) {
+      final date = DateTime(entry.date.year, entry.date.month, entry.date.day);
+      dailyTotals.update(
         date,
         (value) => value + entry.amount,
         ifAbsent: () => entry.amount,
       );
     }
+    return dailyTotals;
+  }
 
-    // Sort dates in descending order
-    _groupedEntries = Map.fromEntries(
-      _groupedEntries.entries.toList()
-        ..sort((e1, e2) => e2.key.compareTo(e1.key)),
+  void updateEntry(Entry updatedEntry) async {
+    final isarService = ref.read(isarServiceProvider);
+    // If it's an update, Isar's put matches by ID.
+    // We need to ensure the ID is set.
+    // Also need to handle if it's a new entry masquerading as update? Unlikely here.
+    await isarService.saveEntry(updatedEntry);
+    ref.invalidate(activeTripEntriesProvider);
+    ref.invalidate(tripProvider); // To update totals in trip list if needed
+  }
+
+  void deleteEntry(String identifier) async {
+    final isarService = ref.read(isarServiceProvider);
+    // Logic for group deletion if needed
+    // Currently IsarService.deleteEntry takes int id.
+    // If identifier is string and might be groupId...
+
+    final entries = ref.read(activeTripEntriesProvider).value ?? [];
+
+    final hasGroupId = entries.any(
+      (e) => e.groupId == identifier && e.groupId != null,
     );
+
+    if (hasGroupId) {
+      final entriesToDelete = entries
+          .where((e) => e.groupId == identifier)
+          .toList();
+      for (final e in entriesToDelete) {
+        await isarService.deleteEntry(e.id);
+      }
+    } else {
+      final id = int.tryParse(identifier);
+      if (id != null) {
+        await isarService.deleteEntry(id);
+      }
+    }
+    ref.invalidate(activeTripEntriesProvider);
+    ref.invalidate(tripProvider);
   }
 
   void _showDetailOptionsSheet(BuildContext context) {
@@ -180,8 +168,6 @@ class EntriesScreenState extends State<EntriesScreen> {
                           setState(() {
                             currentSelection = optionText;
                           });
-                          // Add logic to handle selection if needed
-                          // Navigator.pop(context); // Optional: close on select
                         },
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12.0),
@@ -204,15 +190,19 @@ class EntriesScreenState extends State<EntriesScreen> {
     final textTheme = Theme.of(context).textTheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Consumer(
-      builder: (context, ref, child) {
-        final activeTripAsync = ref.watch(currentActiveTripProvider);
+    final activeTripAsync = ref.watch(currentActiveTripProvider);
+    final entriesAsync = ref.watch(activeTripEntriesProvider);
 
-        return activeTripAsync.when(
-          data: (activeTrip) {
-            final totalSpent = _entries.fold(0.0, (sum, e) => sum + e.amount);
+    return activeTripAsync.when(
+      data: (activeTrip) {
+        return entriesAsync.when(
+          data: (entries) {
+            final groupedEntries = _groupEntriesByDate(entries);
+            final dailyTotals = _calculateDailyTotals(entries);
+
+            final totalSpent = entries.fold(0.0, (sum, e) => sum + e.amount);
             final today = DateTime.now();
-            final todaySpent = _entries
+            final todaySpent = entries
                 .where(
                   (e) =>
                       e.date.year == today.year &&
@@ -311,79 +301,119 @@ class EntriesScreenState extends State<EntriesScreen> {
                     ),
                   ),
                 Expanded(
-                  child: ListView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.only(top: 8, bottom: 96),
-                    itemCount: _groupedEntries.keys.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final date = _groupedEntries.keys.elementAt(index);
-                      final entriesForDate = _groupedEntries[date]!;
-                      final totalAmount = _dailyTotals[date]!;
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              16.0,
-                              16.0,
-                              16.0,
-                              8.0,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12.0,
-                                    vertical: 6.0,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isDark
-                                        ? colorScheme.surfaceContainerHighest
-                                        : colorScheme.primary.withValues(
-                                            alpha: 0.1,
-                                          ),
-                                    borderRadius: BorderRadius.circular(20.0),
-                                  ),
-                                  child: Text(
-                                    DateFormat('EEEE, MMM d').format(date),
-                                    style: textTheme.titleMedium?.copyWith(
-                                      color: colorScheme.primary,
-                                      fontWeight: FontWeight.normal,
-                                    ),
-                                  ),
+                  child: entries.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.receipt_long_rounded,
+                                size: 64,
+                                color: colorScheme.onSurfaceVariant.withOpacity(
+                                  0.5,
                                 ),
-                                Text(
-                                  FormattingUtil.formatCurrency(
-                                    totalAmount,
-                                    activeTrip?.homeCurrency ?? 'USD',
-                                  ),
-                                  style: textTheme.titleMedium?.copyWith(
-                                    color: colorScheme.primary,
-                                    fontWeight: FontWeight.normal,
-                                  ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No entries yet',
+                                style: textTheme.titleLarge?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Tap the + button to add an expense',
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
                           ),
-                          ...entriesForDate.asMap().entries.map((mapEntry) {
-                            final entryIndex = mapEntry.key;
-                            final entry = mapEntry.value;
-                            final isLastItem =
-                                entryIndex == entriesForDate.length - 1;
-                            return EntryItem(
-                              entry: entry,
-                              isLastItem: isLastItem,
-                              onEntryUpdated: updateEntry,
-                              onEntryDeleted: deleteEntry,
-                              homeCurrency: activeTrip?.homeCurrency ?? 'USD',
+                        )
+                      : ListView.builder(
+                          physics: const BouncingScrollPhysics(),
+                          padding: const EdgeInsets.only(top: 8, bottom: 96),
+                          itemCount: groupedEntries.keys.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final date = groupedEntries.keys.elementAt(index);
+                            final entriesForDate = groupedEntries[date]!;
+                            final totalAmount = dailyTotals[date]!;
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16.0,
+                                    16.0,
+                                    16.0,
+                                    8.0,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12.0,
+                                          vertical: 6.0,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: isDark
+                                              ? colorScheme
+                                                    .surfaceContainerHighest
+                                              : colorScheme.primary.withValues(
+                                                  alpha: 0.1,
+                                                ),
+                                          borderRadius: BorderRadius.circular(
+                                            20.0,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          DateFormat(
+                                            'EEEE, MMM d',
+                                          ).format(date),
+                                          style: textTheme.titleMedium
+                                              ?.copyWith(
+                                                color: colorScheme.primary,
+                                                fontWeight: FontWeight.normal,
+                                              ),
+                                        ),
+                                      ),
+                                      Text(
+                                        FormattingUtil.formatCurrency(
+                                          totalAmount,
+                                          activeTrip?.homeCurrency ?? 'USD',
+                                        ),
+                                        style: textTheme.titleMedium?.copyWith(
+                                          color: colorScheme.primary,
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                ...entriesForDate.asMap().entries.map((
+                                  mapEntry,
+                                ) {
+                                  final entryIndex = mapEntry.key;
+                                  final entry = mapEntry.value;
+                                  final isLastItem =
+                                      entryIndex == entriesForDate.length - 1;
+                                  return EntryItem(
+                                    entry: entry,
+                                    isLastItem: isLastItem,
+                                    onEntryUpdated: updateEntry,
+                                    onEntryDeleted: deleteEntry,
+                                    homeCurrency:
+                                        activeTrip?.homeCurrency ?? 'USD',
+                                  );
+                                }),
+                              ],
                             );
-                          }),
-                        ],
-                      );
-                    },
-                  ),
+                          },
+                        ),
                 ),
               ],
             );
@@ -392,6 +422,8 @@ class EntriesScreenState extends State<EntriesScreen> {
           error: (err, stack) => Center(child: Text('Error: $err')),
         );
       },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, stack) => Center(child: Text('Error: $err')),
     );
   }
 }
