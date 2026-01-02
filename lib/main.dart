@@ -6,7 +6,8 @@ import 'services/theme_provider.dart';
 import 'theme/app_theme.dart';
 import 'screens/auth/login_screen.dart'; // Import LoginScreen
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const ProviderScope(child: MyApp()));
 }
 

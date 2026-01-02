@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'dart:math' as math;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:triptrack/data/temp_data.dart';
 import 'package:triptrack/models/entry.dart';
 import 'package:triptrack/widgets/stats_summary_card.dart';
 import 'package:intl/intl.dart';
+import 'package:triptrack/providers/trip_provider.dart';
+import 'package:triptrack/models/trip.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -42,7 +45,7 @@ class _StatsScreenState extends State<StatsScreen> {
   late List<Entry> _allEntries;
   double _totalSpending = 0;
   double _dailyAverage = 0;
-  double _remainingDailyBudget = 0; // Requires Trip budget info
+  double _remainingDailyBudget = 0;
   double _surplus = 0;
 
   @override
@@ -66,7 +69,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
     _categoryColors = {};
     final Set<String> uniqueCategories = _allEntries
-        .map((entry) => entry.category['name'] as String)
+        .map((entry) => entry.category?.name ?? 'General')
         .toSet();
 
     int colorIndex = 0;
@@ -75,14 +78,11 @@ class _StatsScreenState extends State<StatsScreen> {
       colorIndex++;
     }
 
-    // Simple calculations
     _totalSpending = _allEntries.fold(0, (sum, item) => sum + item.amount);
+  }
 
-    // For demo purposes, let's assume a trip duration and budget
-    // In a real app, this would come from the active Trip
-    final activeTrip = TempData.getActiveTrip();
+  void _updateTripStats(Trip? activeTrip) {
     if (activeTrip != null) {
-      // Mocking calculations
       final daysWithEntries = _allEntries
           .map((e) => DateFormat('yyyy-MM-dd').format(e.date))
           .toSet()
@@ -94,15 +94,17 @@ class _StatsScreenState extends State<StatsScreen> {
         _dailyAverage = 0;
       }
 
-      // Mocking remaining daily budget logic - simplistic for now
       final today = DateTime.now();
       final todaySpending = _allEntries
           .where((e) => isSameDay(e.date, today))
           .fold(0.0, (sum, e) => sum + e.amount);
 
       _remainingDailyBudget = activeTrip.dailyBudget - todaySpending;
-
       _surplus = activeTrip.totalBudget - _totalSpending;
+    } else {
+      _dailyAverage = 0;
+      _remainingDailyBudget = 0;
+      _surplus = 0;
     }
   }
 
@@ -112,39 +114,53 @@ class _StatsScreenState extends State<StatsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              Text(
-                'Daily Metrics',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+    return Consumer(
+      builder: (context, ref, child) {
+        final activeTripAsync = ref.watch(currentActiveTripProvider);
+
+        return activeTripAsync.when(
+          data: (activeTrip) {
+            _updateTripStats(activeTrip);
+            final currencySymbol = activeTrip?.homeCurrency ?? 'INR';
+
+            return Scaffold(
+              body: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 16),
+                      Text(
+                        'Daily Metrics',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildSummaryGrid(context, currencySymbol),
+                      const SizedBox(height: 24),
+                      _buildFilters(),
+                      _buildPieChart(),
+                      const SizedBox(height: 24),
+                      _buildCategoryWiseSpendingList(),
+                      const SizedBox(height: 24),
+                      _buildExportButton(),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
-              _buildSummaryGrid(context),
-              const SizedBox(height: 24),
-              _buildFilters(),
-              _buildPieChart(),
-              const SizedBox(height: 24),
-              _buildCategoryWiseSpendingList(),
-              const SizedBox(height: 24),
-              _buildExportButton(),
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
-      ),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(child: Text('Error: $err')),
+        );
+      },
     );
   }
 
-  Widget _buildSummaryGrid(BuildContext context) {
-    final currencyFormat = NumberFormat.simpleCurrency(name: 'INR');
+  Widget _buildSummaryGrid(BuildContext context, String currencySymbol) {
+    final currencyFormat = NumberFormat.simpleCurrency(name: currencySymbol);
 
     return GridView.count(
       crossAxisCount: 2,
@@ -152,7 +168,7 @@ class _StatsScreenState extends State<StatsScreen> {
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
-      childAspectRatio: 2.2, // Much smaller/thinner boxes
+      childAspectRatio: 2.2,
       children: [
         StatsSummaryCard(
           title: 'Daily Average',
@@ -275,7 +291,7 @@ class _StatsScreenState extends State<StatsScreen> {
   Widget _buildPieChart() {
     final Map<String, double> categoryTotals = {};
     for (var entry in _allEntries) {
-      final categoryName = entry.category['name'] as String;
+      final categoryName = entry.category?.name ?? 'General';
       categoryTotals[categoryName] =
           (categoryTotals[categoryName] ?? 0) + entry.amount;
     }
@@ -295,31 +311,30 @@ class _StatsScreenState extends State<StatsScreen> {
       IconData iconData = Icons.category;
       if (category == 'Flight') {
         iconData = Icons.flight;
-      } else if (category == 'Accomodation')
+      } else if (category == 'Accomodation') {
         iconData = Icons.hotel;
-      else if (category == 'Restaurant' || category == 'Food')
+      } else if (category == 'Restaurant' || category == 'Food') {
         iconData = Icons.restaurant;
-      else if (category == 'Transportation' || category == 'Transport')
+      } else if (category == 'Transportation' || category == 'Transport') {
         iconData = Icons.directions_bus;
-      else if (category == 'Shopping')
+      } else if (category == 'Shopping') {
         iconData = Icons.shopping_bag;
+      }
 
-      // Order inside out: Chart -> Icon -> Text
       sections.add(
         PieChartSectionData(
           color: color,
           value: amount,
           title: '${percentage.toStringAsFixed(1)}%',
           radius: 60,
-          // Fix dark mode visibility by using onSurface color
           titleStyle: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
             color: Theme.of(context).colorScheme.onSurface,
           ),
-          titlePositionPercentageOffset: 2.2, // Furthest out (Text)
+          titlePositionPercentageOffset: 2.2,
           badgeWidget: _Badge(iconData, size: 30, borderColor: color),
-          badgePositionPercentageOffset: 1.6, // Middle (Icon)
+          badgePositionPercentageOffset: 1.6,
         ),
       );
     });
@@ -330,10 +345,7 @@ class _StatsScreenState extends State<StatsScreen> {
         alignment: Alignment.topCenter,
         children: [
           CustomPaint(
-            size: const Size(
-              400,
-              400,
-            ), // Size doesn't strictly matter as long as it's large enough or centered
+            size: const Size(400, 400),
             painter: _PieChartConnectorPainter(
               sections: sections,
               centerSpaceRadius: 40,
@@ -347,7 +359,6 @@ class _StatsScreenState extends State<StatsScreen> {
               sectionsSpace: 4,
             ),
           ),
-          // Optional: Add a subtle indicator that these are stats
         ],
       ),
     );
@@ -356,7 +367,7 @@ class _StatsScreenState extends State<StatsScreen> {
   Widget _buildCategoryWiseSpendingList() {
     final Map<String, double> categoryTotals = {};
     for (var entry in _allEntries) {
-      final categoryName = entry.category['name'] as String;
+      final categoryName = entry.category?.name ?? 'General';
       categoryTotals[categoryName] =
           (categoryTotals[categoryName] ?? 0) + entry.amount;
     }
@@ -375,14 +386,22 @@ class _StatsScreenState extends State<StatsScreen> {
         IconData iconData = Icons.category;
         if (category == 'Flight') {
           iconData = Icons.flight;
-        } else if (category == 'Accomodation')
+        } else if (category == 'Accomodation') {
           iconData = Icons.hotel;
-        else if (category == 'Restaurant' || category == 'Food')
+        } else if (category == 'Restaurant' || category == 'Food') {
           iconData = Icons.restaurant;
-        else if (category == 'Transportation' || category == 'Transport')
+        } else if (category == 'Transportation' || category == 'Transport') {
           iconData = Icons.directions_bus;
-        else if (category == 'Shopping')
+        } else if (category == 'Shopping') {
           iconData = Icons.shopping_bag;
+        }
+
+        final categoryObj = _allEntries
+            .firstWhere((e) => (e.category?.name ?? 'General') == category)
+            .category;
+        final color = categoryObj?.color != null
+            ? Color(categoryObj!.color!)
+            : (_categoryColors[category] ?? Colors.grey);
 
         return Container(
           decoration: BoxDecoration(
@@ -409,10 +428,7 @@ class _StatsScreenState extends State<StatsScreen> {
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color:
-                    (_categoryColors[category] ??
-                            Theme.of(context).colorScheme.primaryContainer)
-                        .withOpacity(0.5),
+                color: color.withOpacity(0.5),
                 shape: BoxShape.circle,
               ),
               child: Icon(iconData, color: Colors.white, size: 20),
@@ -482,11 +498,7 @@ class _Badge extends StatelessWidget {
       ),
       padding: EdgeInsets.all(size * .15),
       child: Center(
-        child: Icon(
-          icon,
-          size: size * 0.6, // scale down icon a bit to fit
-          color: Colors.black87,
-        ),
+        child: Icon(icon, size: size * 0.6, color: Colors.black87),
       ),
     );
   }
@@ -511,7 +523,6 @@ class _PieChartConnectorPainter extends CustomPainter {
       totalValue += section.value;
     }
 
-    // Default start angle for FlChart is -90 degrees (12 o'clock) if we set startDegreeOffset: -90
     double startAngle = -90 * (math.pi / 180);
 
     for (var section in sections) {
@@ -520,13 +531,8 @@ class _PieChartConnectorPainter extends CustomPainter {
 
       final sectionRadius = section.radius;
       final outerRadius = centerSpaceRadius + sectionRadius;
-
-      // Line start at the outer edge of the slice
       final lineStartRadius = outerRadius;
 
-      // Line end at the badge center
-      // fl_chart calculates badge position as: centerRadius + (sectionRadius * positionPercentage)
-      // We use 1.6 in the loop above
       final badgePosition = section.badgePositionPercentageOffset;
       final lineEndRadius = centerSpaceRadius + (sectionRadius * badgePosition);
 

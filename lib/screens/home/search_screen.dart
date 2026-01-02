@@ -5,7 +5,6 @@ import 'package:triptrack/providers/search_providers.dart';
 import 'package:triptrack/theme/app_colors.dart';
 import 'package:triptrack/screens/entry/add_expense_screen.dart';
 import 'package:triptrack/models/entry.dart';
-import 'package:triptrack/theme/app_constants.dart';
 
 class SearchScreen extends ConsumerWidget {
   const SearchScreen({super.key});
@@ -520,14 +519,11 @@ class _SearchResultCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final categoryColor = entry.category['color'] as Color?;
-    final categoryIcon = entry.category['icon'] as IconData?;
-    final categoryName = entry.category['name'] ?? 'Unknown';
+    final categoryColor = entry.category?.color;
+    final categoryIcon = entry.category?.icon;
+    final categoryName = entry.category?.name ?? 'Unknown';
 
-    // Amount formatting matching EntryItem
-    final currencyData = AppConstants.currencyData[entry.currency];
-    final currencySymbol = currencyData?['symbol'] ?? entry.currency;
-    final amountString = '$currencySymbol ${entry.amount.toStringAsFixed(0)}';
+    final amountString = entry.amount.toStringAsFixed(0);
 
     // Converted amount logic (Yen)
     String? convertedAmountString;
@@ -542,7 +538,7 @@ class _SearchResultCard extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) =>
-                AddExpenseScreen(category: entry.category, entryToEdit: entry),
+                AddExpenseScreen(category: entry.category!, entryToEdit: entry),
           ),
         );
       },
@@ -572,16 +568,24 @@ class _SearchResultCard extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 // Use a slightly more opaque background for the icon container in cards
-                color: (categoryColor ?? colorScheme.primary).withOpacity(0.1),
-                shape: BoxShape
-                    .circle, // Stats screen uses circle for icon background
+                color:
+                    (categoryColor != null
+                            ? Color(categoryColor)
+                            : colorScheme.primary)
+                        .withOpacity(0.1),
+                shape: BoxShape.circle,
               ),
               child: Icon(
-                categoryIcon ?? Icons.category,
-                color:
-                    categoryColor ??
-                    colorScheme
-                        .primary, // Or white if background is dark/primary? Stats uses white on colored bg.
+                categoryIcon != null
+                    ? IconData(
+                        categoryIcon,
+                        fontFamily: Icons.category.fontFamily,
+                        fontPackage: Icons.category.fontPackage,
+                      )
+                    : Icons.category,
+                color: categoryColor != null
+                    ? Color(categoryColor)
+                    : colorScheme.primary,
                 // Stats screen: color: (categoryColor...).withOpacity(0.5) (bg), Icon color: Colors.white
                 // Let's stick to EntryItem style here as it's cleaner for the icon itself,
                 // BUT user said match Stats styling.

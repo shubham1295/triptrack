@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:triptrack/models/trip.dart';
+import 'package:triptrack/providers/trip_provider.dart';
 
-import 'package:triptrack/theme/app_constants.dart';
-
-class SummaryScreen extends StatelessWidget {
+class SummaryScreen extends ConsumerWidget {
   final String name;
   final String homeCurrency;
   final DateTime? startDate;
   final DateTime? endDate;
   final double totalBudget;
   final double dailyBudget;
+  final String? imagePath;
 
   const SummaryScreen({
     super.key,
@@ -19,13 +21,15 @@ class SummaryScreen extends StatelessWidget {
     this.endDate,
     required this.totalBudget,
     required this.dailyBudget,
+    this.imagePath,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final currencySymbol =
-        AppConstants.currencyData[homeCurrency]?['symbol'] ?? '';
+    final currencySymbol = NumberFormat.simpleCurrency(
+      name: homeCurrency,
+    ).currencySymbol;
 
     return Scaffold(
       appBar: AppBar(
@@ -113,8 +117,72 @@ class SummaryScreen extends StatelessWidget {
               ),
               const Spacer(),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).popUntil((route) => route.isFirst);
+                onPressed: () async {
+                  final tripsAsync = ref.read(tripProvider);
+                  final now = DateTime.now();
+                  final today = DateTime(now.year, now.month, now.day);
+
+                  bool alreadyHasActive = false;
+                  tripsAsync.whenData((trips) {
+                    alreadyHasActive = trips.any(
+                      (trip) =>
+                          trip.endDate != null &&
+                          !trip.endDate!.isBefore(today),
+                    );
+                  });
+
+                  if (alreadyHasActive) {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        title: Row(
+                          children: [
+                            Icon(
+                              Icons.warning_amber_rounded,
+                              color: theme.colorScheme.error,
+                            ),
+                            const SizedBox(width: 10),
+                            const Text('Active Trip Detected'),
+                          ],
+                        ),
+                        content: const Text(
+                          'You currently have an ongoing trip active. To maintain accurate tracking, please ensure your previous trip has ended before starting a new one.',
+                          style: TextStyle(fontSize: 15),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: Text(
+                              'Got it',
+                              style: TextStyle(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                    return;
+                  }
+
+                  final newTrip = Trip(
+                    name: name,
+                    homeCurrency: homeCurrency,
+                    startDate: startDate,
+                    endDate: endDate,
+                    totalBudget: totalBudget,
+                    dailyBudget: dailyBudget,
+                    imagePath: imagePath,
+                    lastModified: DateTime.now(),
+                  );
+                  await ref.read(tripProvider.notifier).addTrip(newTrip);
+                  if (context.mounted) {
+                    Navigator.of(context).popUntil((route) => route.isFirst);
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 15),

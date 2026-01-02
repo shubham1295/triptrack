@@ -7,9 +7,11 @@ import 'package:triptrack/widgets/calculator_keyboard.dart';
 import 'package:triptrack/screens/entry/pick_category_screen.dart';
 import 'package:triptrack/theme/app_constants.dart';
 import 'package:triptrack/models/entry.dart';
+import 'package:isar/isar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AddExpenseScreen extends StatefulWidget {
-  final Map<String, dynamic> category;
+  final Category category;
   final Entry? entryToEdit;
 
   const AddExpenseScreen({super.key, required this.category, this.entryToEdit});
@@ -22,7 +24,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
-  late Map<String, dynamic> _currentCategory;
+  late Category _currentCategory;
 
   String _selectedCurrency = 'USD';
   final double _exchangeRate = 1.0;
@@ -34,6 +36,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   bool _isAdvancedExpanded = false;
   bool _excludeFromMetrics = false;
   bool _isRefund = false;
+  bool _showCalculatorKeyboard = false;
 
   late FocusNode _amountFocusNode;
 
@@ -67,14 +70,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         DateTime startDate = entry.date;
 
         // Try to extract the index from the entry ID
-        final idParts = entry.id.split('_');
-        if (idParts.length == 2) {
-          final index = int.tryParse(idParts[1]);
-          if (index != null) {
-            // Calculate start date by subtracting the index
-            startDate = entry.date.subtract(Duration(days: index));
-          }
-        }
+        // final idParts = entry.id.split('_');
+        // if (idParts.length == 2) {
+        //   final index = int.tryParse(idParts[1]);
+        //   if (index != null) {
+        //     // Calculate start date by subtracting the index
+        //     startDate = entry.date.subtract(Duration(days: index));
+        //   }
+        // }
 
         _selectedDateRange = DateTimeRange(
           start: startDate,
@@ -92,7 +95,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       }
 
       _notesController.text = entry.notes ?? '';
-      _currentCategory = entry.category;
+      _currentCategory = entry.category ?? Category();
       _selectedCurrency = entry.currency;
 
       // Find and set the payment mode
@@ -105,50 +108,45 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       // Set advanced options
       _excludeFromMetrics = entry.isExcludedFromMetrics;
       _isRefund = entry.isRefund;
+    } else {
+      _loadPreferences();
+    }
+  }
+
+  Future<void> _loadPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+
+    final savedCurrency = prefs.getString('last_used_currency');
+    if (savedCurrency != null) {
+      setState(() {
+        _selectedCurrency = savedCurrency;
+      });
+    }
+
+    final savedPaymentMode = prefs.getString('last_payment_mode');
+    if (savedPaymentMode != null) {
+      final mode = _paymentModes.firstWhere(
+        (m) => m['name'] == savedPaymentMode,
+        orElse: () => _paymentModes.first,
+      );
+      setState(() {
+        _selectedPaymentMode = mode;
+      });
     }
   }
 
   void _handleFocusChange() {
     if (_amountFocusNode.hasFocus) {
       SystemChannels.textInput.invokeMethod('TextInput.hide');
-      _showCalculator(context);
+      setState(() {
+        _showCalculatorKeyboard = true;
+      });
+    } else {
+      setState(() {
+        _showCalculatorKeyboard = false;
+      });
     }
-  }
-
-  void _showCalculator(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: false,
-      barrierColor: Colors.transparent,
-      enableDrag: false,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (BuildContext ctx) {
-        final originalColor = _currentCategory['color'] as Color;
-        final darkerColor = HSLColor.fromColor(originalColor)
-            .withLightness(
-              (HSLColor.fromColor(originalColor).lightness - 0.1).clamp(
-                0.0,
-                1.0,
-              ),
-            )
-            .toColor();
-        return CalculatorKeyboard(
-          controller: _amountController,
-          accentColor: darkerColor,
-          onDone: () {
-            Navigator.pop(ctx);
-            // Unfocus handled by whenComplete
-          },
-        );
-      },
-    ).whenComplete(() {
-      // Ensure focus is dropped when the sheet is closed by any means
-      // (Back button, tapping outside, or Done button)
-      _amountFocusNode.unfocus();
-    });
   }
 
   @override
@@ -227,14 +225,17 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         String searchQuery = '';
         return StatefulBuilder(
           builder: (context, setModalState) {
-            final filteredCurrencies = AppConstants.currencyData.entries.where((
-              entry,
-            ) {
-              final code = entry.key.toLowerCase();
-              final name = entry.value['name']!.toLowerCase();
-              final query = searchQuery.toLowerCase();
-              return code.contains(query) || name.contains(query);
-            }).toList();
+            final filteredCurrencies = AppConstants.currencyLocaleMap.keys
+                .where((code) {
+                  final format = NumberFormat.simpleCurrency(name: code);
+                  final name = format.currencyName?.toLowerCase() ?? '';
+                  final symbol = format.currencySymbol.toLowerCase();
+                  final query = searchQuery.toLowerCase();
+                  return code.toLowerCase().contains(query) ||
+                      name.contains(query) ||
+                      symbol.contains(query);
+                })
+                .toList();
 
             return Padding(
               padding: EdgeInsets.only(
@@ -285,9 +286,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                         itemCount: filteredCurrencies.length,
                         separatorBuilder: (context, index) => const Divider(),
                         itemBuilder: (context, index) {
-                          final entry = filteredCurrencies[index];
-                          final code = entry.key;
-                          final data = entry.value;
+                          final code = filteredCurrencies[index];
+                          final format = NumberFormat.simpleCurrency(
+                            name: code,
+                          );
                           final isSelected = _selectedCurrency == code;
 
                           return ListTile(
@@ -299,14 +301,14 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                                 context,
                               ).colorScheme.onSurface,
                               child: Text(
-                                data['symbol'] ?? '\$',
+                                format.currencySymbol,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
                             title: Text(
-                              '$code - ${data['name']}',
+                              code,
                               style: const TextStyle(
                                 fontWeight: FontWeight.w600,
                               ),
@@ -625,570 +627,639 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final categoryColor = _currentCategory['color'] as Color;
-    final categoryIcon = _currentCategory['icon'] as IconData;
-    final categoryName = _currentCategory['name'] as String;
+    final categoryColor = Color(_currentCategory.color ?? Colors.blue.value);
+    final categoryIcon = IconData(
+      _currentCategory.icon ?? Icons.category.codePoint,
+      fontFamily: Icons.category.fontFamily,
+      fontPackage: Icons.category.fontPackage,
+    );
+    final categoryName = _currentCategory.name ?? 'General';
 
-    return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.close_rounded, color: colorScheme.onSurface),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          widget.entryToEdit != null ? 'Edit Expense' : categoryName,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onSurface,
+    return PopScope(
+      canPop: !_showCalculatorKeyboard,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        if (_showCalculatorKeyboard) {
+          setState(() {
+            _showCalculatorKeyboard = false;
+          });
+          _amountFocusNode.unfocus();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.close_rounded, color: colorScheme.onSurface),
+            onPressed: () => Navigator.of(context).pop(),
           ),
-        ),
-        centerTitle: true,
-        actions: widget.entryToEdit != null
-            ? [
-                IconButton(
-                  icon: Icon(Icons.delete_outline_rounded, color: Colors.red),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: const Text('Delete Expense'),
-                        content: Text(
-                          widget.entryToEdit!.groupId != null
-                              ? 'This will delete all entries in this multi-day expense. Are you sure?'
-                              : 'Are you sure you want to delete this expense?',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx),
-                            child: const Text('Cancel'),
+          title: Text(
+            widget.entryToEdit != null ? 'Edit Expense' : categoryName,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          centerTitle: true,
+          actions: widget.entryToEdit != null
+              ? [
+                  IconButton(
+                    icon: Icon(Icons.delete_outline_rounded, color: Colors.red),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: const Text('Delete Expense'),
+                          content: Text(
+                            widget.entryToEdit!.groupId != null
+                                ? 'This will delete all entries in this multi-day expense. Are you sure?'
+                                : 'Are you sure you want to delete this expense?',
                           ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(ctx); // Close dialog
-                              // Return delete action with groupId if it exists
-                              Navigator.of(context).pop({
-                                'action': 'delete',
-                                'groupId': widget.entryToEdit!.groupId,
-                                'entryId': widget.entryToEdit!.id,
-                              });
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(ctx); // Close dialog
+                                // Return delete action with groupId if it exists
+                                Navigator.of(context).pop({
+                                  'action': 'delete',
+                                  'groupId': widget.entryToEdit!.groupId,
+                                  'entryId': widget.entryToEdit!.id,
+                                });
+                              },
+                              child: const Text(
+                                'Delete',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ]
+              : null,
+        ),
+        body: GestureDetector(
+          onTap: () {
+            // Close calculator keyboard if open
+            if (_showCalculatorKeyboard || _amountFocusNode.hasFocus) {
+              _amountFocusNode.unfocus();
+            }
+          },
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20.0,
+              vertical: 12.0,
+            ),
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+                // Header: Icon + Amount + Currency
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainer,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          InkWell(
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const PickCategoryScreen(
+                                        isSelecting: true,
+                                      ),
+                                ),
+                              );
+                              if (result != null) {
+                                setState(() {
+                                  _currentCategory = result;
+                                });
+                              }
                             },
-                            child: const Text(
-                              'Delete',
-                              style: TextStyle(color: Colors.red),
+                            borderRadius: BorderRadius.circular(100),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: categoryColor.withOpacity(0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                categoryIcon,
+                                size: 32,
+                                color: categoryColor,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: TextField(
+                              controller: _amountController,
+                              focusNode: _amountFocusNode,
+                              readOnly: true, // Disable system keyboard
+                              showCursor: true,
+                              // keyboardType: const TextInputType.numberWithOptions(
+                              //   decimal: true,
+                              // ), // Removed as we use custom keyboard
+                              style: theme.textTheme.displaySmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: '0',
+                                border: InputBorder.none,
+                                hintStyle: TextStyle(
+                                  color: colorScheme.onSurfaceVariant
+                                      .withOpacity(0.5),
+                                ),
+                              ),
                             ),
                           ),
                         ],
                       ),
-                    );
-                  },
-                ),
-              ]
-            : null,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            // Header: Icon + Amount + Currency
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainer,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
+                      const SizedBox(height: 16),
+                      const Divider(height: 1),
+                      const SizedBox(height: 16),
                       InkWell(
-                        onTap: () async {
-                          final result = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const PickCategoryScreen(isSelecting: true),
-                            ),
-                          );
-                          if (result != null) {
-                            setState(() {
-                              _currentCategory = result;
-                            });
-                          }
-                        },
-                        borderRadius: BorderRadius.circular(100),
+                        onTap: () => _showCurrencyPicker(context),
+                        borderRadius: BorderRadius.circular(12),
                         child: Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
-                            color: categoryColor.withOpacity(0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            categoryIcon,
-                            size: 32,
-                            color: categoryColor,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextField(
-                          controller: _amountController,
-                          focusNode: _amountFocusNode,
-                          readOnly: true, // Disable system keyboard
-                          showCursor: true,
-                          // keyboardType: const TextInputType.numberWithOptions(
-                          //   decimal: true,
-                          // ), // Removed as we use custom keyboard
-                          style: theme.textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: '0',
-                            border: InputBorder.none,
-                            hintStyle: TextStyle(
-                              color: colorScheme.onSurfaceVariant.withOpacity(
+                            color: colorScheme.surface,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: colorScheme.outlineVariant.withOpacity(
                                 0.5,
                               ),
                             ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primaryContainer,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  NumberFormat.simpleCurrency(
+                                    name: _selectedCurrency,
+                                  ).currencySymbol,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.onPrimaryContainer,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _selectedCurrency,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.primary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                size: 20,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                '1 $_selectedCurrency = $_exchangeRate USD', // Placeholder
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  const Divider(height: 1),
-                  const SizedBox(height: 16),
-                  InkWell(
-                    onTap: () => _showCurrencyPicker(context),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+                ),
+
+                const SizedBox(height: 24),
+
+                // Date & Spend Across Days
+                Container(
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    children: [
+                      SwitchListTile(
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                            top: Radius.circular(20),
+                          ),
+                        ),
+                        title: Text(
+                          'Spend Across Days',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                        value: _spendAcrossDays,
+                        activeThumbColor: categoryColor,
+                        onChanged: (val) {
+                          setState(() {
+                            _spendAcrossDays = val;
+                          });
+                        },
                       ),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surface,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.outlineVariant.withOpacity(0.5),
+                      const Divider(height: 1, indent: 16, endIndent: 16),
+                      InkWell(
+                        onTap: () {
+                          if (_spendAcrossDays) {
+                            _selectDateRange(context);
+                          } else {
+                            _selectDate(context);
+                          }
+                        },
+                        borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(20),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_month_rounded,
+                                color: categoryColor,
+                              ),
+                              const SizedBox(width: 16),
+                              Text(
+                                _spendAcrossDays
+                                    ? _selectedDateRange == null
+                                          ? 'Select Date Range'
+                                          : '${DateFormat('MMM dd').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.end)}'
+                                    : DateFormat(
+                                        'EEEE, MMM dd, yyyy',
+                                      ).format(_selectedDate),
+                                style: theme.textTheme.bodyLarge?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const Spacer(),
+                              Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 16,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primaryContainer,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              AppConstants
-                                      .currencyData[_selectedCurrency]?['symbol'] ??
-                                  '\$',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onPrimaryContainer,
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Payment & Details
+                Container(
+                  decoration: BoxDecoration(
+                    color: colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    children: [
+                      InkWell(
+                        onTap: () => _showPaymentModePicker(context),
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  _selectedPaymentMode['icon'] as IconData,
+                                  color: Colors.blue,
+                                  size: 20,
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 16),
+                              const Expanded(
+                                child: Text(
+                                  'Payment Mode',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                              Text(
+                                _selectedPaymentMode['name'].toString(),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.primary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            _selectedCurrency,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.primary,
-                            ),
+                        ),
+                      ),
+                      const Divider(height: 1, indent: 56),
+                      ListTile(
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withOpacity(0.1),
+                            shape: BoxShape.circle,
                           ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            Icons.keyboard_arrow_down_rounded,
+                          child: const Icon(
+                            Icons.description_rounded,
+                            color: Colors.orange,
                             size: 20,
-                            color: colorScheme.onSurfaceVariant,
                           ),
-                          const SizedBox(width: 12),
-                          Text(
-                            '1 $_selectedCurrency = $_exchangeRate USD', // Placeholder
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
+                        ),
+                        title: TextField(
+                          controller: _notesController,
+                          textCapitalization: TextCapitalization.sentences,
+                          decoration: const InputDecoration(
+                            hintText: 'Add notes...',
+                            border: InputBorder.none,
                           ),
-                        ],
+                          style: theme.textTheme.bodyMedium,
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
+                const SizedBox(height: 16),
 
-            const SizedBox(height: 24),
-
-            // Date & Spend Across Days
-            Container(
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                children: [
-                  SwitchListTile(
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(20),
+                // Extras
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildExtraButton(
+                        context,
+                        icon: Icons.place_rounded,
+                        label: 'Location',
+                        color: Colors.redAccent,
+                        onTap: () {},
                       ),
                     ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildExtraButton(
+                        context,
+                        icon: Icons.camera_alt_rounded,
+                        label: 'Photo',
+                        color: Colors.teal,
+                        onTap: () {},
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
+                // Advanced Options
+                Theme(
+                  data: Theme.of(
+                    context,
+                  ).copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
                     title: Text(
-                      'Spend Across Days',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
+                      'Advanced Options',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    value: _spendAcrossDays,
-                    activeThumbColor: categoryColor,
-                    onChanged: (val) {
-                      setState(() {
-                        _spendAcrossDays = val;
+                    initiallyExpanded: _isAdvancedExpanded,
+                    onExpansionChanged: (val) =>
+                        setState(() => _isAdvancedExpanded = val),
+                    children: [
+                      CheckboxListTile(
+                        title: const Text('Exclude from daily metrics'),
+                        activeColor: categoryColor,
+                        value: _excludeFromMetrics,
+                        onChanged: (val) =>
+                            setState(() => _excludeFromMetrics = val ?? false),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      CheckboxListTile(
+                        title: const Text('Refund payment'),
+                        activeColor: categoryColor,
+                        value: _isRefund,
+                        onChanged: (val) =>
+                            setState(() => _isRefund = val ?? false),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // Save Button
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {
+                      final amountText = _amountController.text;
+                      if (amountText.isEmpty) {
+                        _showErrorSnackBar('Please enter an amount');
+                        return;
+                      }
+
+                      // Save the selected currency and payment mode as preference
+                      SharedPreferences.getInstance().then((prefs) {
+                        prefs.setString(
+                          'last_used_currency',
+                          _selectedCurrency,
+                        );
+                        prefs.setString(
+                          'last_payment_mode',
+                          _selectedPaymentMode['name'],
+                        );
                       });
-                    },
-                  ),
-                  const Divider(height: 1, indent: 16, endIndent: 16),
-                  InkWell(
-                    onTap: () {
+
+                      final calculatedAmount = _evaluateExpression(amountText);
+                      if (calculatedAmount <= 0.0 && amountText != '0') {
+                        _showErrorSnackBar('Invalid expression or amount');
+                        return;
+                      }
+
                       if (_spendAcrossDays) {
-                        _selectDateRange(context);
-                      } else {
-                        _selectDate(context);
-                      }
-                    },
-                    borderRadius: const BorderRadius.vertical(
-                      bottom: Radius.circular(20),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.calendar_month_rounded,
-                            color: categoryColor,
-                          ),
-                          const SizedBox(width: 16),
-                          Text(
-                            _spendAcrossDays
-                                ? _selectedDateRange == null
-                                      ? 'Select Date Range'
-                                      : '${DateFormat('MMM dd').format(_selectedDateRange!.start)} - ${DateFormat('MMM dd, yyyy').format(_selectedDateRange!.end)}'
-                                : DateFormat(
-                                    'EEEE, MMM dd, yyyy',
-                                  ).format(_selectedDate),
-                            style: theme.textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const Spacer(),
-                          Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 16,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                        if (_selectedDateRange == null) {
+                          _showErrorSnackBar('Please select a date range');
+                          return;
+                        }
 
-            const SizedBox(height: 16),
+                        final int totalDays =
+                            _selectedDateRange!.duration.inDays + 1;
+                        if (totalDays > 0) {
+                          final double dailyAmount =
+                              calculatedAmount / totalDays;
+                          final List<Entry> entries = [];
+                          final String groupId = DateTime.now()
+                              .millisecondsSinceEpoch
+                              .toString();
 
-            // Payment & Details
-            Container(
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                children: [
-                  InkWell(
-                    onTap: () => _showPaymentModePicker(context),
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(20),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              _selectedPaymentMode['icon'] as IconData,
-                              color: Colors.blue,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          const Expanded(
-                            child: Text(
-                              'Payment Mode',
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                          Text(
-                            _selectedPaymentMode['name'].toString(),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.primary,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const Divider(height: 1, indent: 56),
-                  ListTile(
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.description_rounded,
-                        color: Colors.orange,
-                        size: 20,
-                      ),
-                    ),
-                    title: TextField(
-                      controller: _notesController,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: const InputDecoration(
-                        hintText: 'Add notes...',
-                        border: InputBorder.none,
-                      ),
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
+                          for (int i = 0; i < totalDays; i++) {
+                            final date = _selectedDateRange!.start.add(
+                              Duration(days: i),
+                            );
+                            entries.add(
+                              Entry(
+                                // id will be auto-generated by Isar
+                                amount: dailyAmount,
+                                currency: _selectedCurrency,
+                                exchangeRate: _exchangeRate,
+                                category: _currentCategory,
+                                date: date,
+                                endDate: _selectedDateRange!
+                                    .end, // Store the end date
+                                notes: _notesController.text,
+                                paymentMode: _selectedPaymentMode['name'],
+                                isExcludedFromMetrics: _excludeFromMetrics,
+                                isRefund: _isRefund,
+                                groupId:
+                                    groupId, // Link all entries with same groupId
+                              ),
+                            );
+                          }
 
-            // Extras
-            Row(
-              children: [
-                Expanded(
-                  child: _buildExtraButton(
-                    context,
-                    icon: Icons.place_rounded,
-                    label: 'Location',
-                    color: Colors.redAccent,
-                    onTap: () {},
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildExtraButton(
-                    context,
-                    icon: Icons.camera_alt_rounded,
-                    label: 'Photo',
-                    color: Colors.teal,
-                    onTap: () {},
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Advanced Options
-            Theme(
-              data: Theme.of(
-                context,
-              ).copyWith(dividerColor: Colors.transparent),
-              child: ExpansionTile(
-                title: Text(
-                  'Advanced Options',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                initiallyExpanded: _isAdvancedExpanded,
-                onExpansionChanged: (val) =>
-                    setState(() => _isAdvancedExpanded = val),
-                children: [
-                  CheckboxListTile(
-                    title: const Text('Exclude from daily metrics'),
-                    activeColor: categoryColor,
-                    value: _excludeFromMetrics,
-                    onChanged: (val) =>
-                        setState(() => _excludeFromMetrics = val ?? false),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                  CheckboxListTile(
-                    title: const Text('Refund payment'),
-                    activeColor: categoryColor,
-                    value: _isRefund,
-                    onChanged: (val) =>
-                        setState(() => _isRefund = val ?? false),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // Save Button
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () {
-                  final amountText = _amountController.text;
-                  if (amountText.isEmpty) {
-                    _showErrorSnackBar('Please enter an amount');
-                    return;
-                  }
-
-                  final calculatedAmount = _evaluateExpression(amountText);
-                  if (calculatedAmount <= 0.0 && amountText != '0') {
-                    _showErrorSnackBar('Invalid expression or amount');
-                    return;
-                  }
-
-                  if (_spendAcrossDays) {
-                    if (_selectedDateRange == null) {
-                      _showErrorSnackBar('Please select a date range');
-                      return;
-                    }
-
-                    final int totalDays =
-                        _selectedDateRange!.duration.inDays + 1;
-                    if (totalDays > 0) {
-                      final double dailyAmount = calculatedAmount / totalDays;
-                      final List<Entry> entries = [];
-                      final String groupId = DateTime.now()
-                          .millisecondsSinceEpoch
-                          .toString();
-
-                      for (int i = 0; i < totalDays; i++) {
-                        final date = _selectedDateRange!.start.add(
-                          Duration(days: i),
-                        );
-                        entries.add(
-                          Entry(
-                            id: '${groupId}_$i',
-                            amount: dailyAmount,
-                            currency: _selectedCurrency,
-                            exchangeRate: _exchangeRate,
-                            category: _currentCategory,
-                            date: date,
-                            endDate:
-                                _selectedDateRange!.end, // Store the end date
-                            notes: _notesController.text,
-                            paymentMode: _selectedPaymentMode['name'],
-                            isExcludedFromMetrics: _excludeFromMetrics,
-                            isRefund: _isRefund,
-                            groupId:
-                                groupId, // Link all entries with same groupId
-                          ),
-                        );
+                          // If editing, return info to delete old entries
+                          if (widget.entryToEdit != null) {
+                            Navigator.of(context).pop({
+                              'action': 'update',
+                              'oldGroupId': widget.entryToEdit!.groupId,
+                              'oldEntryId': widget.entryToEdit!.id,
+                              'entries': entries,
+                            });
+                          } else {
+                            Navigator.of(context).pop(entries);
+                          }
+                          return;
+                        }
                       }
 
-                      // If editing, return info to delete old entries
-                      if (widget.entryToEdit != null) {
+                      final newEntry = Entry(
+                        // id will be auto-generated by Isar if not provided, or use existing if editing
+                        id: widget.entryToEdit != null
+                            ? widget.entryToEdit!.id
+                            : Isar.autoIncrement,
+                        amount: calculatedAmount,
+                        currency: _selectedCurrency,
+                        exchangeRate: _exchangeRate,
+                        category: _currentCategory,
+                        date: _selectedDate,
+                        notes: _notesController.text,
+                        paymentMode: _selectedPaymentMode['name'],
+                        isExcludedFromMetrics: _excludeFromMetrics,
+                        isRefund: _isRefund,
+                      );
+
+                      // If editing a grouped entry that's now single-day, delete old group
+                      if (widget.entryToEdit != null &&
+                          widget.entryToEdit!.groupId != null) {
                         Navigator.of(context).pop({
                           'action': 'update',
                           'oldGroupId': widget.entryToEdit!.groupId,
-                          'oldEntryId': widget.entryToEdit!.id,
-                          'entries': entries,
+                          'entry': newEntry,
                         });
                       } else {
-                        Navigator.of(context).pop(entries);
+                        Navigator.of(context).pop(newEntry);
                       }
-                      return;
-                    }
-                  }
-
-                  final newEntry = Entry(
-                    id:
-                        widget.entryToEdit?.id ??
-                        DateTime.now().millisecondsSinceEpoch.toString(),
-                    amount: calculatedAmount,
-                    currency: _selectedCurrency,
-                    exchangeRate: _exchangeRate,
-                    category: _currentCategory,
-                    date: _selectedDate,
-                    notes: _notesController.text,
-                    paymentMode: _selectedPaymentMode['name'],
-                    isExcludedFromMetrics: _excludeFromMetrics,
-                    isRefund: _isRefund,
-                  );
-
-                  // If editing a grouped entry that's now single-day, delete old group
-                  if (widget.entryToEdit != null &&
-                      widget.entryToEdit!.groupId != null) {
-                    Navigator.of(context).pop({
-                      'action': 'update',
-                      'oldGroupId': widget.entryToEdit!.groupId,
-                      'entry': newEntry,
-                    });
-                  } else {
-                    Navigator.of(context).pop(newEntry);
-                  }
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor: categoryColor,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  elevation: 4,
-                  shadowColor: categoryColor.withOpacity(0.4),
-                ),
-                child: Text(
-                  widget.entryToEdit != null
-                      ? 'Update Expense'
-                      : 'Save Expense',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: categoryColor,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      elevation: 4,
+                      shadowColor: categoryColor.withOpacity(0.4),
+                    ),
+                    child: Text(
+                      widget.entryToEdit != null
+                          ? 'Update Expense'
+                          : 'Save Expense',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 24),
+              ],
             ),
-            const SizedBox(height: 24),
-          ],
+          ),
         ),
+        bottomSheet: _showCalculatorKeyboard
+            ? Container(
+                color: theme.scaffoldBackgroundColor,
+                child: Builder(
+                  builder: (context) {
+                    final originalColor = Color(
+                      _currentCategory.color ?? Colors.blue.value,
+                    );
+                    final darkerColor = HSLColor.fromColor(originalColor)
+                        .withLightness(
+                          (HSLColor.fromColor(originalColor).lightness - 0.1)
+                              .clamp(0.0, 1.0),
+                        )
+                        .toColor();
+                    return CalculatorKeyboard(
+                      controller: _amountController,
+                      accentColor: darkerColor,
+                      onDone: () {
+                        _amountFocusNode.unfocus();
+                      },
+                    );
+                  },
+                ),
+              )
+            : null,
       ),
     );
   }
@@ -1210,7 +1281,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           color: theme.colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+            color: theme.colorScheme.outlineVariant.withOpacity(0.3),
           ),
         ),
         child: Row(

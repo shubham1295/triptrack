@@ -96,7 +96,7 @@ final availableCategoriesProvider = Provider.autoDispose<List<String>>((ref) {
   final entries = TempData.getDummyEntries();
   final categories = <String>{};
   for (var entry in entries) {
-    categories.add(entry.category['name'] ?? '');
+    categories.add(entry.category?.name ?? '');
   }
   return categories.toList()..sort();
 });
@@ -136,15 +136,19 @@ final searchResultsProvider = Provider.autoDispose<List<Entry>>((ref) {
     // 1. Keyword Search
     bool matchesQuery = true;
     if (filters.query.isNotEmpty) {
+      final categoryMatches =
+          entry.category?.name != null &&
+          entry.category!.name!.toLowerCase().contains(queryLower);
       matchesQuery =
           (entry.notes?.toLowerCase().contains(queryLower) ?? false) ||
           (entry.location?.toLowerCase().contains(queryLower) ?? false) ||
-          entry.category['name'].toString().toLowerCase().contains(queryLower);
+          categoryMatches;
     }
 
     // 2. Exact Match Filters
     if (filters.category != null &&
-        entry.category['name'] != filters.category) {
+        (entry.category?.name == null ||
+            entry.category!.name != filters.category)) {
       return false;
     }
     if (filters.country != null && entry.location != filters.country) {
