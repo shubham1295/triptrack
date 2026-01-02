@@ -181,7 +181,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ref.invalidate(activeTripEntriesProvider);
                     }
                   } else {
-                    // TODO: Handle case where no trip is active/selected
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
