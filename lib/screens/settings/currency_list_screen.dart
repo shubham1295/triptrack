@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:triptrack/theme/app_constants.dart';
 
@@ -17,7 +18,7 @@ class _CurrencyListScreenState extends State<CurrencyListScreen> {
   @override
   void initState() {
     super.initState();
-    _filteredCurrencies = AppConstants.currencyData.keys.toList();
+    _filteredCurrencies = AppConstants.currencyLocaleMap.keys.toList();
     _searchController.addListener(_filterCurrencies);
   }
 
@@ -31,9 +32,17 @@ class _CurrencyListScreenState extends State<CurrencyListScreen> {
   void _filterCurrencies() {
     final query = _searchController.text.toLowerCase();
     setState(() {
-      _filteredCurrencies = AppConstants.currencyData.keys.where((code) {
-        final name = AppConstants.currencyData[code]!['name']!.toLowerCase();
-        return code.toLowerCase().contains(query) || name.contains(query);
+      _filteredCurrencies = AppConstants.currencyLocaleMap.keys.toList().where((
+        code,
+      ) {
+        final format = NumberFormat.simpleCurrency(name: code);
+        // Note: currencyName is usually the code (e.g. USD) in standard intl
+        final name = format.currencyName?.toLowerCase() ?? '';
+        final symbol = format.currencySymbol.toLowerCase();
+
+        return code.toLowerCase().contains(query) ||
+            name.contains(query) ||
+            symbol.contains(query);
       }).toList();
     });
   }
@@ -89,7 +98,8 @@ class _CurrencyListScreenState extends State<CurrencyListScreen> {
                   Divider(height: 1, color: Colors.grey[200]),
               itemBuilder: (context, index) {
                 final code = _filteredCurrencies[index];
-                final currency = AppConstants.currencyData[code]!;
+                final format = NumberFormat.simpleCurrency(name: code);
+
                 return Material(
                   color: theme
                       .cardColor, // Use card color for list tile background
@@ -105,9 +115,10 @@ class _CurrencyListScreenState extends State<CurrencyListScreen> {
                       child: Row(
                         children: [
                           SizedBox(
-                            width: 40.0, // Fixed width for currency symbol
+                            width:
+                                50.0, // Expanded width for potentially longer symbols
                             child: Text(
-                              '${currency['symbol']}',
+                              format.currencySymbol,
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -118,7 +129,7 @@ class _CurrencyListScreenState extends State<CurrencyListScreen> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              '${currency['name']}',
+                              format.currencyName ?? code,
                               style: TextStyle(
                                 fontSize: 16,
                                 color: theme.colorScheme.onSurface,

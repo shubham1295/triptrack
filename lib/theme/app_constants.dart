@@ -79,30 +79,23 @@ class AppConstants {
     },
   ];
 
-  static const Map<String, Map<String, String>> currencyData = {
-    // --- The World's Major Currencies ---
-
-    // North America
-    'USD': {'name': 'US Dollar', 'symbol': '\$'},
-    'CAD': {'name': 'Canadian Dollar', 'symbol': 'CA\$'},
-
-    // Europe
-    'EUR': {'name': 'Euro', 'symbol': '€'},
-    'GBP': {'name': 'British Pound', 'symbol': '£'},
-    'CHF': {'name': 'Swiss Franc', 'symbol': 'CHF'},
-    'SEK': {'name': 'Swedish Krona', 'symbol': 'kr'},
-    'NOK': {'name': 'Norwegian Krone', 'symbol': 'kr'},
-    'DKK': {'name': 'Danish Krone', 'symbol': 'kr'},
-
-    // Asia/Pacific
-    'JPY': {'name': 'Japanese Yen', 'symbol': '¥'},
-    'AUD': {'name': 'Australian Dollar', 'symbol': 'A\$'},
-    'NZD': {'name': 'New Zealand Dollar', 'symbol': 'NZ\$'},
-    'SGD': {'name': 'Singapore Dollar', 'symbol': 'S\$'},
-    'HKD': {'name': 'Hong Kong Dollar', 'symbol': 'HK\$'},
-
-    // Key Emerging Market Currencies (High Volume/Geographic Importance)
-    'CNY': {'name': 'Chinese Yuan', 'symbol': '¥'},
-    'INR': {'name': 'Indian Rupee', 'symbol': '₹'},
+  // Currency to locale mapping
+  // TODO: Replace with API data on app load
+  static const Map<String, String> currencyLocaleMap = {
+    'USD': 'en_US', // US Dollar
+    'CAD': 'en_CA', // Canadian Dollar
+    'EUR': 'de_DE', // Euro (using German locale)
+    'GBP': 'en_GB', // British Pound
+    'CHF': 'de_CH', // Swiss Franc
+    'SEK': 'sv_SE', // Swedish Krona
+    'NOK': 'nb_NO', // Norwegian Krone
+    'DKK': 'da_DK', // Danish Krone
+    'JPY': 'ja_JP', // Japanese Yen
+    'AUD': 'en_AU', // Australian Dollar
+    'NZD': 'en_NZ', // New Zealand Dollar
+    'SGD': 'en_SG', // Singapore Dollar
+    'HKD': 'zh_HK', // Hong Kong Dollar
+    'CNY': 'zh_CN', // Chinese Yuan
+    'INR': 'en_IN', // Indian Rupee
   };
 }

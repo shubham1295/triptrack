@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:triptrack/theme/app_constants.dart';
 import 'package:triptrack/models/entry.dart';
 import 'package:triptrack/theme/app_strings.dart';
@@ -8,15 +9,18 @@ import 'package:triptrack/screens/home/stats_screen.dart';
 import 'package:triptrack/screens/entry/pick_category_screen.dart';
 import 'package:triptrack/screens/home/search_screen.dart';
 import 'package:triptrack/screens/settings/settings_screen.dart';
+import 'package:triptrack/providers/trip_provider.dart';
+import 'package:triptrack/screens/trip/add_trip_screen.dart';
+import 'package:triptrack/services/isar_service.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedIndex = 0;
   final GlobalKey<EntriesScreenState> _entriesScreenKey = GlobalKey();
 
@@ -27,6 +31,26 @@ class _HomeScreenState extends State<HomeScreen> {
     const SettingsScreen(),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    // Check for trips on initial load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkTripsAndRedirect();
+    });
+  }
+
+  void _checkTripsAndRedirect() {
+    final tripsAsync = ref.read(tripProvider);
+    tripsAsync.whenData((trips) {
+      if (trips.isEmpty) {
+        Navigator.of(
+          context,
+        ).pushNamed(AddTripScreen.routeName, arguments: {'canPop': false});
+      }
+    });
+  }
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -35,6 +59,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(tripProvider, (previous, next) {
+      next.whenData((trips) {
+        if (trips.isEmpty && mounted) {
+          // If no trips, and we haven't already pushed/are on AddTripScreen
+          // We can check the current route if needed, but simple pushNamed works for now
+          Navigator.of(
+            context,
+          ).pushNamed(AddTripScreen.routeName, arguments: {'canPop': false});
+        }
+      });
+    });
+
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
@@ -50,23 +86,32 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.location_on_rounded,
-              size: 20,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              'Japan',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
+        title: Consumer(
+          builder: (context, ref, child) {
+            final activeTripAsync = ref.watch(currentActiveTripProvider);
+            return activeTripAsync.when(
+              data: (activeTrip) => Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.location_on_rounded,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    activeTrip?.name ?? 'No Trip Selected',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
+              loading: () => const Text('Loading...'),
+              error: (err, stack) => const Text('Error'),
+            );
+          },
         ),
         actions: [
           IconButton(
@@ -117,11 +162,32 @@ class _HomeScreenState extends State<HomeScreen> {
                     builder: (context) => const PickCategoryScreen(),
                   ),
                 );
-                if (result != null && _entriesScreenKey.currentState != null) {
-                  if (result is Entry) {
-                    _entriesScreenKey.currentState!.addEntry(result);
-                  } else if (result is List<Entry>) {
-                    _entriesScreenKey.currentState!.addEntries(result);
+
+                if (result != null) {
+                  final activeTripAsync = ref.read(currentActiveTripProvider);
+                  final activeTrip = activeTripAsync.asData?.value;
+
+                  if (activeTrip != null) {
+                    final isarService = ref.read(isarServiceProvider);
+
+                    if (result is Entry) {
+                      await isarService.addEntryToTrip(activeTrip.id, result);
+                      // Refresh the trip provider to reflect changes if necessary
+                      ref.invalidate(tripProvider);
+                      ref.invalidate(activeTripEntriesProvider);
+                    } else if (result is List<Entry>) {
+                      await isarService.addEntriesToTrip(activeTrip.id, result);
+                      ref.invalidate(tripProvider);
+                      ref.invalidate(activeTripEntriesProvider);
+                    }
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('No active trip selected!'),
+                        ),
+                      );
+                    }
                   }
                 }
               },

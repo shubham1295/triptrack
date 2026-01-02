@@ -1,6 +1,6 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:triptrack/screens/trip/summary_screen.dart';
-import 'package:triptrack/theme/app_constants.dart';
 
 class SetBudgetScreen extends StatefulWidget {
   final String name;
@@ -57,8 +57,9 @@ class _SetBudgetScreenState extends State<SetBudgetScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currencySymbol =
-        AppConstants.currencyData[widget.homeCurrency]?['symbol'] ?? '';
+    final currencySymbol = NumberFormat.simpleCurrency(
+      name: widget.homeCurrency,
+    ).currencySymbol;
     final bool showDailyBudget = widget.startDate != null;
 
     return Scaffold(

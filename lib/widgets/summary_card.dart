@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:triptrack/utils/formatting_util.dart';
 
 class SummaryCard extends StatelessWidget {
   final String title;
-  final String amount;
+  final double amount;
   final String budget;
   final double progressValue;
   final VoidCallback onMoreTap;
+  final String currency;
 
   const SummaryCard({
     super.key,
@@ -14,12 +16,19 @@ class SummaryCard extends StatelessWidget {
     required this.budget,
     required this.progressValue,
     required this.onMoreTap,
+    required this.currency,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+
+    // Split amount into integer and decimal parts
+    final amountStr = amount.toStringAsFixed(2);
+    final parts = amountStr.split('.');
+    final integerPart = parts[0];
+    final decimalPart = parts.length > 1 ? '.${parts[1]}' : '';
 
     return Container(
       padding: const EdgeInsets.all(16.0),
@@ -65,31 +74,44 @@ class SummaryCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text(
-                    amount,
-                    style: textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      FormattingUtil.formatCurrency(
+                        double.parse(integerPart),
+                        currency,
+                        decimalDigits: 0,
+                      ),
+                      style: textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                        fontSize: 22,
+                      ),
                     ),
-                  ),
-                  Text(
-                    '.55',
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
+                    Text(
+                      decimalPart,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 4),
-              Text(
-                budget,
-                style: textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Text(
+                  budget,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 11,
+                  ),
                 ),
               ),
             ],
